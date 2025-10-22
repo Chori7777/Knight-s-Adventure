@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: tileset_16x16(new Forest)_29
   m_EditorClassIdentifier: 
   m_Sprite: {fileID: -321404788, guid: c470d689a2228694887d7eb1c8a4208b, type: 3}
-  m_Color: {r: 0.76470596, g: 0.50980395, b: 0.43137258, a: 1}
+  m_Color: {r: 0.7688679, g: 1, b: 0.7707223, a: 1}
   m_Transform:
     e00: 1
     e01: 0

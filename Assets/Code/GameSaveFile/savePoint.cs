@@ -12,7 +12,7 @@ public class savePoint : MonoBehaviour
             Vector3 posicionCamara = Camera.main.transform.position;
 
             ControladorDatosJuego.Instance.GuardarCheckpoint(posicionJugador, posicionCamara);
-            Debug.Log("✅ Guardado en checkpoint");
+            Debug.Log(" Guardado en checkpoint");
         }
     }
 

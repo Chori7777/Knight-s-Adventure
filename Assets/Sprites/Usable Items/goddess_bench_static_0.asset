@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 13312, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: gold_coin_collected_effect_0
+  m_Name: goddess_bench_static_0
   m_EditorClassIdentifier: 
-  m_Sprite: {fileID: 7882442628899631982, guid: ad3797c9fd00e964db91c7385722debc, type: 3}
+  m_Sprite: {fileID: 6521060890802903884, guid: 297f2dfff874310428200fb3ecdfb869, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1
