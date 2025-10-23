@@ -305,8 +305,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 0}
-  projectilePrefab1: {fileID: 2960812306753669557, guid: 80fc63640594eca40bb36d95c20e08dc, type: 3}
-  projectilePrefab2: {fileID: 6682483255585087732, guid: 1c9fd3b9e1d4e944e956803dd3b3b851, type: 3}
+  projectilePrefab1: {fileID: 6682483255585087732, guid: ed8593356b73d1246b95866e601dd5f3, type: 3}
+  projectilePrefab2: {fileID: 6682483255585087732, guid: ed8593356b73d1246b95866e601dd5f3, type: 3}
   firePoint1: {fileID: 1013273133848912547}
   firePoint2: {fileID: 297062937211440368}
   projectileSpeed: 7.24

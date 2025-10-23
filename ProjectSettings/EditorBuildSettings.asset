@@ -27,6 +27,9 @@ EditorBuildSettings:
     path: Assets/Scenes/NormalMaps/TheForest.unity
     guid: c89987071e31b9b42b9e9d5564ecece2
   - enabled: 1
+    path: Assets/Scenes/NormalMaps/ForestBoss.unity
+    guid: 6561868039f692c4383e38cf51282567
+  - enabled: 1
     path: Assets/Scenes/AllMenus/GameOver.unity
     guid: b7682bcb2222bfa4aa5dfe4eaf5558f3
   - enabled: 1
