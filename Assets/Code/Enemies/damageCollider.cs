@@ -11,7 +11,7 @@ public class damageCollider : MonoBehaviour
 
             if (playerHealth != null)
             {
-                playerHealth.RecibeDano(transform.position, damage);
+                playerHealth.TakeDamage(transform.position, damage);
 
             }
         }

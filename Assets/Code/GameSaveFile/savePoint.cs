@@ -11,7 +11,7 @@ public class savePoint : MonoBehaviour
             Vector3 posicionJugador = transform.position;
             Vector3 posicionCamara = Camera.main.transform.position;
 
-            ControladorDatosJuego.Instance.GuardarCheckpoint(posicionJugador, posicionCamara);
+            ControladorDatosJuego.Instance.GuardarCheckpoint(posicionJugador);
             Debug.Log(" Guardado en checkpoint");
         }
     }
@@ -22,7 +22,7 @@ public class savePoint : MonoBehaviour
         Vector3 posicionJugador = transform.position;
         Vector3 posicionCamara = Camera.main.transform.position;
 
-        ControladorDatosJuego.Instance.GuardarCheckpoint(posicionJugador, posicionCamara);
+        ControladorDatosJuego.Instance.GuardarCheckpoint(posicionJugador);
     }
 
 

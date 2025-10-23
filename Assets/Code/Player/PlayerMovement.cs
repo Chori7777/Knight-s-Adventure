@@ -4,676 +4,714 @@ using UnityEngine.SceneManagement;
 
 public class PlayerMovement : MonoBehaviour
 {
-    // COMPONENTES BASE
-    // Rigidbody2D: controla la fisica del jugador (velocidad, gravedad, fuerzas)
+    // ============================================
+    // COMPONENTES
+    // ============================================
     private Rigidbody2D rb;
-    // Animator: controla las animaciones del jugador
-    private Animator anim;
+    private PlayerAnimationController animController;
 
-    [Header("Componentes")]
-    // Transform que marca donde se detecta el suelo (abajo del jugador)
+    // ============================================
+    // REFERENCIAS
+    // ============================================
+    [Header("Puntos de Detección")]
     [SerializeField] private Transform groundCheck;
-    // Transform que marca donde se detecta la pared (al costado del jugador)
     [SerializeField] private Transform wallCheck;
-    // Transform que marca donde aparecen los proyectiles al lanzarlos
     [SerializeField] private Transform projectileSpawnPoint;
-    // Prefab del proyectil que se va a instanciar
+
+    [Header("Prefabs y Capas")]
     [SerializeField] private GameObject projectilePrefab;
+    [SerializeField] private LayerMask groundLayer;
+    [SerializeField] private LayerMask wallLayer;
 
+    // ============================================
+    // MOVIMIENTO
+    // ============================================
     [Header("Movimiento")]
-    // Velocidad de movimiento horizontal
-    public float speed = 5f;
-    // Fuerza del primer salto
-    public float fuerzaSalto = 12f;
-    // Fuerza del segundo salto (doble salto)
-    public float fuerzaSaltoDoble = 10f;
-    // Fuerza del empuje al recibir daño (knockback)
-    public float impulseForce = 10f;
-    // Velocidad del dash (desplazamiento rapido)
-    public float dashSpeed = 20f;
-    // Duracion del dash en segundos
-    public float dashTime = 0.15f;
-    // Tiempo de espera entre dashes
-    public float dashCooldown = 0.5f;
-    // Velocidad de deslizamiento por la pared
-    public float wallSlideSpeed = 2f;
+    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float blockMoveSpeed = 2f;
+    [SerializeField] private float sprintMultiplier = 1.5f;    // NUEVO: Multiplicador de velocidad (>1 = corre, <1 = lento)
+    [SerializeField] private bool isSprintMode = true;         // NUEVO: true = sprint, false = slow
 
-    [Header("Detección")]
-    // Longitud del rayo para detectar suelo y paredes
-    public float longitudRayo = 0.1f;
-    // Capa que representa el suelo (se configura en Unity)
-    public LayerMask capaSuelo;
-    // Capa que representa las paredes
-    public LayerMask capaPared;
-
-    [Header("Wall Climbing")]
-    // Gravedad reducida al estar en la pared (0.5 = mitad de gravedad normal)
-    public float wallGravity = 0.5f;
-    // Guarda la gravedad original para restaurarla despues
-    private float originalGravity;
-
-    [Header("Wall Jump")]
-    // Fuerza del salto de pared (x = horizontal, y = vertical)
-    public Vector2 wallJumpForce = new Vector2(10f, 12f);
-
-    [Header("Wall Slide Derrape")]
-    // Velocidad rapida de deslizamiento al presionar S
-    public float wallSlideFastSpeed = 6f;
-    // Tecla para activar deslizamiento rapido
-    public KeyCode wallSlideKey = KeyCode.S;
-    // Flag que indica si esta haciendo deslizamiento rapido
-    private bool isFastWallSliding = false;
-
-    [Header("Salto Caida")]
-    // Multiplicador de gravedad al caer (hace que caiga mas rapido)
-    public float fallMultiplier = 2.5f;
-    // Multiplicador al soltar espacio (salto mas bajo si no mantenes la tecla)
-    public float lowJumpMultiplier = 2f;
-
-    [Header("Habilidades Activables")]
-    // Flags booleanos que activan o desactivan habilidades
-    public bool puedeMoverse = true;
-    public bool puedeSaltar = true;
-    public bool puedeDobleSalto = true; // Controla si puede hacer doble salto
-    public bool puedeAtacar = true;
-    public bool puedeDash = true;
-    public bool puedeWallCling = true;
-    public bool puedeBloquear = true;
-    public bool puedeLanzar = true;
-
-    [Header("Sistema de Combate")]
-    // Fuerza del empuje hacia adelante al atacar
-    public float attackStepForce = 3f;
-    // Duracion de cada animacion de ataque (ajustar segun tus animaciones)
-    public float attackGroundDuration = 0.4f;
-    public float attackAirDuration = 0.4f;
-
-    // VARIABLES PRIVADAS DE COMBATE
-    // Contador de ataques en el combo actual (0, 1 o 2)
-    private int currentCombo = 0;
-    // Flag que indica si esta ejecutando un ataque
-    private bool isAttacking = false;
-
-    [Header("Proyectiles")]
-    // Velocidad horizontal del proyectil
-    public float projectileSpeed = 10f;
-    // Tiempo de espera entre lanzamientos
-    public float projectileCooldown = 0.5f;
-    // Ultimo momento en que se lanzo un proyectil
-    private float lastProjectileTime = 0f;
-
-    [Header("Variables Internas")]
-    // Contador de saltos realizados (0, 1 o 2)
-    private int jumpCount = 0;
-    // Cantidad maxima de saltos permitidos
-    private int maxJumps = 2;
-    // Flag que indica si estaba en el suelo en el frame anterior
-    private bool estabaEnSuelo = false;
-    // Ultimo momento en que se hizo dash
-    private float lastDashTime = -10f;
-    // Flag que indica si esta dasheando actualmente
-    private bool isDashing = false;
-    // Timer del dash (cuenta regresiva)
-    private float dashTimer = 0f;
-    // Almacena el input horizontal (-1, 0 o 1)
     private float horizontalInput;
+    private bool facingRight = true;
 
-    [Header("Bloqueo")]
-    // Velocidad reducida al moverse con el escudo
-    public float shieldMoveSpeed = 2f;
+    // ============================================
+    // SALTO
+    // ============================================
+    [Header("Salto")]
+    [SerializeField] private float jumpForce = 12f;
+    [SerializeField] private float doubleJumpForce = 10f;
+    [SerializeField] private float fallMultiplier = 3f;        // Aumentado para que se note más
+    [SerializeField] private float lowJumpMultiplier = 2.5f;   // Aumentado para que se note más
+    [SerializeField] private float coyoteTime = 0.15f;
+    [SerializeField] private float jumpBufferTime = 0.1f;
 
+    private float coyoteTimeCounter;
+    private float jumpBufferCounter;
+    private bool hasDoubleJumped;
+
+    // ============================================
+    // DASH
+    // ============================================
+    [Header("Dash")]
+    [SerializeField] private float dashSpeed = 20f;
+    [SerializeField] private float dashDuration = 0.15f;
+    [SerializeField] private float dashCooldown = 0.5f;
+
+    private bool isDashing;
+    private float dashTimer;
+    private float lastDashTime = -10f;
+
+    // ============================================
+    // PARED
+    // ============================================
+    [Header("Interacción con Paredes")]
+    [SerializeField] private float wallSlideSpeed = 2f;
+    [SerializeField] private float wallSlideFastSpeed = 6f;
+    [SerializeField] private Vector2 wallJumpForce = new Vector2(10f, 12f);
+    [SerializeField] private float wallGravity = 0.5f;
+    [SerializeField] private float wallJumpLockTime = 0.2f;    // NUEVO: tiempo para evitar volver a pegarse
+
+    private float originalGravity;
+    private bool isFastWallSliding;
+    private bool isWallSliding;                                // NUEVO: estado de wall slide
+    private float wallJumpLockTimer;                           // NUEVO: timer para lockeo
+
+    // ============================================
+    // COMBATE
+    // ============================================
+    [Header("Combate")]
+    [SerializeField] private float attackStepSpeed = 5f;       // Velocidad del empuje
+    [SerializeField] private float attackStepDelay = 0.15f;    // Delay antes de empujar (tiempo de windup)
+    [SerializeField] private float attackStepDuration = 0.1f;  // Duración del empuje
+    [SerializeField] private float attackGroundDuration = 0.4f;
+    [SerializeField] private float attackAirDuration = 0.4f;
+    [SerializeField] private float attackCooldown = 0.1f;      // NUEVO: Cooldown entre ataques
+    [SerializeField] private float knockbackForce = 10f;
+    [SerializeField] private float damageRecoveryTime = 0.5f;
+
+    private int currentCombo;
+    private bool isAttacking;
+    private float attackDelayTimer;
+    private float attackMoveTimer;
+    private bool attackStepActive;
+    private float lastAttackTime = -10f;                       // NUEVO: Tiempo del último ataque
+
+    // ============================================
+    // PROYECTILES
+    // ============================================
+    [Header("Proyectiles")]
+    [SerializeField] private float projectileSpeed = 10f;
+    [SerializeField] private float projectileCooldown = 0.5f;
+
+    private float lastProjectileTime;
+
+    // ============================================
+    // HABILIDADES
+    // ============================================
+    [Header("Habilidades Desbloqueables")]
+    public bool canMove = true;
+    public bool canJump = true;
+    public bool canDoubleJump = true;
+    public bool canAttack = true;
+    public bool canDash = true;
+    public bool canWallCling = true;
+    public bool canBlock = true;
+    public bool canThrowProjectile = true;
+
+    // ============================================
+    // DETECCION
+    // ============================================
+    [Header("Detección")]
+    [SerializeField] private float groundCheckRay = 0.2f;
+    [SerializeField] private float wallCheckDistance = 0.5f;
+    [SerializeField] private float inputDeadzone = 0.1f;
+
+    private bool isGrounded;
+    private bool isTouchingWall;
+    private bool wasGrounded;
+
+    // ============================================
+    // ESTADO
+    // ============================================
     [Header("Estado")]
-    // Flag publico que indica si recibio daño (bloquea controles)
-    [SerializeField] public bool recibiodaño = false;
+    [SerializeField] private bool isTakingDamage;
 
-    // START: se ejecuta una vez al inicio
-    void Start()
+    // ============================================
+    // UNITY CALLBACKS
+    // ============================================
+
+    private void Start()
     {
-        // Obtener componentes del GameObject
+        InitializeComponents();
+        CreateDetectionPoints();
+    }
+
+    private void Update()
+    {
+        if (isTakingDamage) return;
+
+        CaptureInput();
+        UpdateDetectionStates();
+        UpdateJumpTimers();
+        UpdateWallJumpLock();
+        UpdateAttackStepTimer(); // NUEVO: actualizar timer de empuje
+
+        if (!isDashing)
+        {
+            HandleAllActions();
+        }
+        else
+        {
+            UpdateDashTimer();
+        }
+
+        ApplyBetterFalling();
+    }
+
+    private void FixedUpdate()
+    {
+        if (isTakingDamage) return;
+
+        bool isBlocking = Input.GetKey(KeyCode.X);
+        bool isHoldingCtrl = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+
+        // CORREGIDO: Empuje de ataque con DELAY - solo se activa después del windup
+        if (attackStepActive && attackMoveTimer > 0)
+        {
+            float direction = facingRight ? 1f : -1f;
+            rb.linearVelocity = new Vector2(direction * attackStepSpeed, rb.linearVelocity.y);
+            attackMoveTimer -= Time.fixedDeltaTime;
+
+            if (attackMoveTimer <= 0)
+            {
+                attackStepActive = false;
+            }
+        }
+        // Movimiento normal con sprint/slow
+        else if (!isDashing && canMove && !isAttacking && !isBlocking)
+        {
+            float finalSpeed = moveSpeed;
+
+            // Sistema de Sprint/Slow con Ctrl
+            if (isHoldingCtrl)
+            {
+                if (isSprintMode)
+                {
+                    // Modo Sprint: Ctrl multiplica velocidad
+                    finalSpeed = moveSpeed * sprintMultiplier;
+                }
+                else
+                {
+                    // Modo Slow: Ctrl divide velocidad
+                    finalSpeed = moveSpeed / sprintMultiplier;
+                }
+            }
+
+            ApplyMovement(horizontalInput * finalSpeed);
+        }
+        // Bloqueo con movimiento lento
+        else if (isBlocking && !isAttacking)
+        {
+            ApplyMovement(horizontalInput * blockMoveSpeed);
+        }
+        // Si estamos atacando pero NO en empuje, frenar el movimiento horizontal
+        else if (isAttacking && !attackStepActive)
+        {
+            rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+        }
+    }
+
+    private void OnTriggerEnter(Collider collision)
+    {
+        if (collision.CompareTag("Finish"))
+        {
+            SceneManager.LoadScene("Victory");
+        }
+    }
+
+    // ============================================
+    // INICIALIZACION
+    // ============================================
+
+    private void InitializeComponents()
+    {
         rb = GetComponent<Rigidbody2D>();
-        anim = GetComponent<Animator>();
-        // Guardar la gravedad original para poder restaurarla
+        animController = GetComponent<PlayerAnimationController>();
+
+        if (animController == null)
+        {
+            animController = gameObject.AddComponent<PlayerAnimationController>();
+        }
+
+        animController.Initialize(this);
         originalGravity = rb.gravityScale;
+    }
 
-        // CREAR OBJETOS DE DETECCION SI NO EXISTEN
-        // Esto permite que el script funcione aunque no asignes los transforms manualmente
-
+    private void CreateDetectionPoints()
+    {
         if (groundCheck == null)
         {
-            // Crear un GameObject hijo para detectar el suelo
             GameObject groundCheckObj = new GameObject("GroundCheck");
             groundCheckObj.transform.SetParent(transform);
-            // Posicionarlo abajo del jugador
             groundCheckObj.transform.localPosition = new Vector3(0, -0.5f, 0);
             groundCheck = groundCheckObj.transform;
         }
 
         if (wallCheck == null)
         {
-            // Crear un GameObject hijo para detectar paredes
             GameObject wallCheckObj = new GameObject("WallCheck");
             wallCheckObj.transform.SetParent(transform);
-            // Posicionarlo al costado del jugador
             wallCheckObj.transform.localPosition = new Vector3(0.3f, 0, 0);
             wallCheck = wallCheckObj.transform;
         }
 
         if (projectileSpawnPoint == null)
         {
-            // Crear un GameObject hijo para el spawn de proyectiles
             GameObject spawnObj = new GameObject("ProjectileSpawn");
             spawnObj.transform.SetParent(transform);
-            // Posicionarlo adelante y arriba del centro del jugador
             spawnObj.transform.localPosition = new Vector3(0.5f, 0.2f, 0);
             projectileSpawnPoint = spawnObj.transform;
         }
     }
 
-    // UPDATE: se ejecuta cada frame
-    void Update()
-    {
-        // Si recibio daño, no procesar inputs (el jugador esta en hitstun)
-        if (recibiodaño) return;
+    // ============================================
+    // INPUT
+    // ============================================
 
-        // Capturar input horizontal (-1 = izquierda, 0 = nada, 1 = derecha)
+    private void CaptureInput()
+    {
         horizontalInput = Input.GetAxisRaw("Horizontal");
+    }
 
-        // Si NO esta dasheando, procesar controles normales
-        if (!isDashing)
+    // ============================================
+    // DETECCION DE ESTADOS
+    // ============================================
+
+    private void UpdateDetectionStates()
+    {
+        wasGrounded = isGrounded;
+        isGrounded = Physics2D.Raycast(groundCheck.position, Vector2.down, groundCheckRay, groundLayer);
+
+        // CORREGIDO: Solo detectar pared si NO estamos en lockeo de wall jump
+        Vector2 wallDirection = facingRight ? Vector2.right : Vector2.left;
+        isTouchingWall = wallJumpLockTimer <= 0 &&
+                        Physics2D.Raycast(wallCheck.position, wallDirection, wallCheckDistance, wallLayer);
+
+        // Reset de doble salto y fast slide solo cuando realmente tocamos suelo
+        if (isGrounded && !wasGrounded)
         {
-            // Ejecutar cada funcion solo si la habilidad esta activada
-            if (puedeMoverse) Movimiento();
-            if (puedeSaltar) Saltar();
-            if (puedeAtacar) Attack();
-            if (puedeDash) Dash();
-            if (puedeWallCling) WallCling();
-            if (puedeBloquear) Bloqueo();
-            if (puedeLanzar) LanzarProyectil();
-        }
-        // Si esta dasheando, actualizar el timer del dash
-        else if (isDashing)
-        {
-            dashTimer -= Time.deltaTime;
-            // Cuando el timer llega a 0, terminar el dash
-            if (dashTimer <= 0)
-            {
-                isDashing = false;
-                StopDashing();
-            }
-        }
-
-        // Aplicar fisica de caida mejorada
-        AplicarCaidaRapida();
-        // Actualizar parametros del animator
-        ActualizarAnimaciones();
-    }
-
-    // FIXEDUPDATE: se ejecuta a intervalos fijos (mejor para fisica)
-    void FixedUpdate()
-    {
-        // Si recibio daño, no aplicar movimiento
-        if (recibiodaño) return;
-
-        // Verificar si esta bloqueando
-        bool estaBloquando = anim.GetBool("isBlocking");
-
-        // APLICAR VELOCIDAD HORIZONTAL SEGUN EL ESTADO
-
-        // Movimiento normal: no esta dasheando, bloqueando ni atacando
-        if (!isDashing && puedeMoverse && !isAttacking && !estaBloquando)
-        {
-            SetVelocityX(horizontalInput * speed);
-        }
-        // Movimiento reducido: esta bloqueando pero no atacando
-        else if (estaBloquando && !isAttacking)
-        {
-            SetVelocityX(horizontalInput * shieldMoveSpeed);
-        }
-        // Movimiento durante ataque: manejado en StartAttack() con attackStepForce
-        // No aplicar velocidad adicional aqui
-    }
-
-    // Detectar colision con trigger de victoria
-    private void OnTriggerEnter(Collider collision)
-    {
-        if (collision.gameObject.CompareTag("Finish"))
-        {
-            SceneManager.LoadScene("Victory");
-        }
-    }
-
-    // ===== FUNCIONES HELPER =====
-    // Estas funciones simplifican operaciones comunes
-
-    // Cambiar solo la velocidad horizontal (mantener Y)
-    private void SetVelocityX(float velocity)
-    {
-        rb.linearVelocity = new Vector2(velocity, rb.linearVelocity.y);
-    }
-
-    // Cambiar solo la velocidad vertical (mantener X)
-    private void SetVelocityY(float velocity)
-    {
-        rb.linearVelocity = new Vector2(rb.linearVelocity.x, velocity);
-    }
-
-    // Cambiar la escala de gravedad del rigidbody
-    private void SetGravity(float scale)
-    {
-        rb.gravityScale = scale;
-    }
-
-    // Voltear el sprite segun la direccion del movimiento
-    private void FlipSprite(float direction)
-    {
-        // Solo voltear si hay direccion (no es 0)
-        if (direction != 0)
-        {
-            // Mathf.Sign devuelve -1 o 1
-            // Cambiar scale.x voltea el sprite horizontalmente
-            transform.localScale = new Vector3(Mathf.Sign(direction), 1, 1);
-        }
-    }
-
-    // Detectar si esta tocando el suelo usando raycast
-    private bool EstaEnSuelo()
-    {
-        // Lanzar un rayo hacia abajo desde groundCheck
-        // Si golpea algo en la capa capaSuelo, devolver true
-        return Physics2D.Raycast(groundCheck.position, Vector2.down, longitudRayo, capaSuelo).collider != null;
-    }
-
-    // Detectar si esta tocando una pared usando raycast
-    private bool EstaEnPared()
-    {
-        // Lanzar un rayo horizontal desde wallCheck en la direccion que mira
-        // transform.localScale.x es -1 o 1 dependiendo de donde mira
-        return Physics2D.Raycast(wallCheck.position, Vector2.right * transform.localScale.x, longitudRayo, capaPared).collider != null;
-    }
-
-    // ===== MOVIMIENTO =====
-    private void Movimiento()
-    {
-        // No mover si esta atacando
-        if (isAttacking) return;
-
-        // Voltear el sprite segun la direccion del input
-        FlipSprite(horizontalInput);
-        // Actualizar parametro del animator para animacion de caminar
-        // Mathf.Abs convierte negativo en positivo (necesitamos 0 o 1, no -1)
-        anim.SetFloat("Movement", Mathf.Abs(horizontalInput));
-    }
-
-    // ===== SALTO =====
-    private void Saltar()
-    {
-        // Verificar estado actual
-        bool enSuelo = EstaEnSuelo();
-        bool enPared = EstaEnPared();
-
-        // RESET DE SALTO AL TOCAR EL SUELO
-        // Si acaba de tocar el suelo (esta en suelo pero no estaba antes)
-        if (enSuelo && !estabaEnSuelo)
-        {
-            jumpCount = 0; // Resetear contador de saltos
-            anim.SetBool("Jump", false); // Desactivar animacion de salto
-            isFastWallSliding = false; // Desactivar deslizamiento rapido
-        }
-
-        // Guardar estado para el proximo frame
-        estabaEnSuelo = enSuelo;
-
-        // EJECUTAR SALTO AL PRESIONAR ESPACIO
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            // SALTO NORMAL O DOBLE SALTO
-            if (jumpCount < maxJumps)
-            {
-                // Si es el segundo salto, verificar que este habilitado el doble salto
-                if (jumpCount == 1 && !puedeDobleSalto)
-                {
-                    // No hacer nada si el doble salto esta desactivado
-                    return;
-                }
-
-                // Elegir fuerza segun si es primer o segundo salto
-                float fuerza = (jumpCount == 0) ? fuerzaSalto : fuerzaSaltoDoble;
-                // Resetear velocidad vertical antes de saltar (evita acumulacion)
-                SetVelocityY(0);
-                // Aplicar fuerza hacia arriba (Impulse = instantaneo)
-                rb.AddForce(Vector2.up * fuerza, ForceMode2D.Impulse);
-                jumpCount++; // Incrementar contador
-                anim.SetBool("Jump", true); // Activar animacion
-
-                // Trigger especial para segundo salto
-                if (jumpCount == 2)
-                    anim.SetTrigger("DoubleJump");
-            }
-            // WALL JUMP (salto de pared)
-            // Solo si NO esta en suelo pero SI esta en pared
-            else if (!enSuelo && enPared)
-            {
-                // Saltar en direccion opuesta a donde mira (-1 o 1)
-                float wallJumpDir = -transform.localScale.x;
-                // Aplicar velocidad directamente (no AddForce)
-                rb.linearVelocity = new Vector2(wallJumpDir * speed, fuerzaSalto);
-                // Voltear sprite hacia la nueva direccion
-                FlipSprite(wallJumpDir);
-                // Setear jumpCount a 1 (puede hacer un salto mas)
-                jumpCount = 1;
-                anim.SetTrigger("Jump");
-            }
-        }
-    }
-
-    // ===== WALL CLING (agarrarse a la pared) =====
-    private void WallCling()
-    {
-        bool enPared = EstaEnPared();
-
-        // CONDICIONES PARA ACTIVAR WALL CLING:
-        // 1. No esta en el suelo
-        // 2. Esta tocando una pared
-        // 3. Esta presionando hacia la pared (horizontalInput > 0.1)
-        // 4. La direccion del input coincide con donde mira
-        bool wallClinging = !EstaEnSuelo() && enPared && Mathf.Abs(horizontalInput) > 0.1f &&
-                           Mathf.Sign(horizontalInput) == Mathf.Sign(transform.localScale.x);
-
-        if (wallClinging)
-        {
-            // DESLIZAMIENTO RAPIDO (si presiono S)
-            if (isFastWallSliding)
-            {
-                SetVelocityY(-wallSlideFastSpeed);
-            }
-            // DESLIZAMIENTO NORMAL
-            else
-            {
-                // Limitar velocidad de caida (no puede caer mas rapido que wallSlideSpeed)
-                rb.linearVelocity = new Vector2(rb.linearVelocity.x,
-                    Mathf.Clamp(rb.linearVelocity.y, -wallSlideSpeed, float.MaxValue));
-            }
-
-            // Reducir gravedad para deslizamiento mas lento
-            SetGravity(wallGravity);
-            anim.SetBool("WallCling", true);
-            // Permitir un salto desde la pared
-            jumpCount = 1;
-
-            // WALL JUMP desde wall cling
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                // Saltar en direccion opuesta
-                float jumpDirection = -transform.localScale.x;
-                rb.linearVelocity = new Vector2(jumpDirection * wallJumpForce.x, wallJumpForce.y);
-                anim.SetBool("WallCling", false);
-                isFastWallSliding = false;
-            }
-
-            // Activar deslizamiento rapido
-            if (Input.GetKeyDown(wallSlideKey))
-            {
-                StartCoroutine(ActivarWallSlideFast());
-            }
-        }
-        else
-        {
-            // Restaurar gravedad normal
-            SetGravity(originalGravity);
-            anim.SetBool("WallCling", false);
+            hasDoubleJumped = false;
             isFastWallSliding = false;
         }
     }
 
-    // Coroutine que activa deslizamiento rapido temporalmente
-    private IEnumerator ActivarWallSlideFast()
+    private void UpdateJumpTimers()
     {
-        isFastWallSliding = true;
-        anim.SetBool("FastWallSlide", true);
-        // Esperar medio segundo
-        yield return new WaitForSeconds(0.5f);
-        // Desactivar
-        isFastWallSliding = false;
-        anim.SetBool("FastWallSlide", false);
+        coyoteTimeCounter = isGrounded ? coyoteTime : coyoteTimeCounter - Time.deltaTime;
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            jumpBufferCounter = jumpBufferTime;
+        }
+        else
+        {
+            jumpBufferCounter -= Time.deltaTime;
+        }
     }
 
-    // ===== CAIDA RAPIDA =====
-    // Mejora la sensacion del salto haciendo que caiga mas rapido
-    private void AplicarCaidaRapida()
+    private void UpdateWallJumpLock()
     {
-        // No aplicar si esta en wall slide rapido
-        if (isFastWallSliding) return;
+        if (wallJumpLockTimer > 0)
+        {
+            wallJumpLockTimer -= Time.deltaTime;
+        }
+    }
 
-        // Si esta cayendo (velocidad Y negativa)
+    // ============================================
+    // ACCIONES
+    // ============================================
+
+    private void HandleAllActions()
+    {
+        if (canMove) HandleMovement();
+        if (canWallCling) HandleWallCling(); // ORDEN IMPORTANTE: antes del salto
+        if (canJump) HandleJump();
+        if (canAttack) HandleAttack();
+        if (canDash) HandleDash();
+        if (canThrowProjectile) HandleProjectile();
+    }
+
+    // ============================================
+    // MOVIMIENTO
+    // ============================================
+
+    private void HandleMovement()
+    {
+        if (isAttacking) return;
+        FlipCharacter(horizontalInput);
+    }
+
+    private void ApplyMovement(float speed)
+    {
+        rb.linearVelocity = new Vector2(speed, rb.linearVelocity.y);
+    }
+
+    private void FlipCharacter(float direction)
+    {
+        if (direction > 0 && !facingRight)
+        {
+            Flip();
+        }
+        else if (direction < 0 && facingRight)
+        {
+            Flip();
+        }
+    }
+
+    private void Flip()
+    {
+        facingRight = !facingRight;
+        Vector3 scale = transform.localScale;
+        scale.x *= -1;
+        transform.localScale = scale;
+    }
+
+    // ============================================
+    // SALTO
+    // ============================================
+
+    private void HandleJump()
+    {
+        bool wantsToJump = jumpBufferCounter > 0f;
+
+        if (wantsToJump)
+        {
+            // 1️⃣ Salto en pared (PRIORIDAD MÁXIMA para evitar conflictos)
+            if (isWallSliding && isTouchingWall)
+            {
+                PerformWallJump();
+                jumpBufferCounter = 0f;
+            }
+            // 2️⃣ Salto normal o con coyote time
+            else if (isGrounded || coyoteTimeCounter > 0f)
+            {
+                PerformJump(jumpForce);
+                jumpBufferCounter = 0f;
+                hasDoubleJumped = false;
+                coyoteTimeCounter = 0f;
+            }
+            // 3️⃣ Doble salto (solo si ya estás en el aire Y no estás en pared)
+            else if (!isGrounded && !hasDoubleJumped && canDoubleJump && !isTouchingWall)
+            {
+                PerformDoubleJump();
+                jumpBufferCounter = 0f;
+            }
+        }
+    }
+
+    // CORREGIDO: Salto normal con reset de velocidad Y
+    private void PerformJump(float force)
+    {
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+        rb.AddForce(Vector2.up * force, ForceMode2D.Impulse);
+    }
+
+    // NUEVO: Doble salto con reset COMPLETO de velocidad Y para que funcione bien al caer
+    private void PerformDoubleJump()
+    {
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f); // Reset crucial
+        rb.AddForce(Vector2.up * doubleJumpForce, ForceMode2D.Impulse);
+        hasDoubleJumped = true;
+        animController.TriggerDoubleJump();
+    }
+
+    private void PerformWallJump()
+    {
+        float jumpDirection = facingRight ? -1f : 1f;
+        rb.linearVelocity = new Vector2(jumpDirection * wallJumpForce.x, wallJumpForce.y);
+        hasDoubleJumped = false;
+        isWallSliding = false;
+        wallJumpLockTimer = wallJumpLockTime; // Activar lockeo
+    }
+
+    // CORREGIDO: Mejor detección de caída y salto corto
+    private void ApplyBetterFalling()
+    {
+        // No aplicar si estamos en wall slide
+        if (isWallSliding) return;
+
+        // Caída rápida
         if (rb.linearVelocity.y < 0)
         {
-            // Aumentar gravedad multiplicando por fallMultiplier
-            // Esto hace que caiga mas rapido de lo normal
-            rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1) * Time.deltaTime;
+            rb.gravityScale = fallMultiplier;
         }
-        // Si esta subiendo pero solto la tecla de salto
+        // Salto corto (soltar espacio)
         else if (rb.linearVelocity.y > 0 && !Input.GetKey(KeyCode.Space))
         {
-            // Aplicar gravedad extra para cortar el salto (salto mas bajo)
-            rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (lowJumpMultiplier - 1) * Time.deltaTime;
+            rb.gravityScale = lowJumpMultiplier;
+        }
+        // Gravedad normal
+        else
+        {
+            rb.gravityScale = originalGravity;
         }
     }
 
-    // ===== DASH =====
-    private void Dash()
+    // ============================================
+    // DASH
+    // ============================================
+
+    private void HandleDash()
     {
-        // Verificar si presiono shift Y ya paso el cooldown
         if (Input.GetKeyDown(KeyCode.LeftShift) && Time.time > lastDashTime + dashCooldown)
         {
-            // Activar dash
             isDashing = true;
-            dashTimer = dashTime; // Iniciar timer
-            lastDashTime = Time.time; // Guardar momento del dash
-            anim.SetBool("Dash", true);
+            dashTimer = dashDuration;
+            lastDashTime = Time.time;
         }
 
-        // Mientras esta dasheando, aplicar velocidad rapida
         if (isDashing)
         {
-            float dashDir = transform.localScale.x; // Direccion donde mira
-            SetVelocityX(dashDir * dashSpeed);
+            float dashDirection = facingRight ? 1f : -1f;
+            rb.linearVelocity = new Vector2(dashDirection * dashSpeed, rb.linearVelocity.y);
         }
     }
 
-    // Funcion publica para terminar el dash (puede ser llamada desde animacion)
-    public void StopDashing()
+    private void UpdateDashTimer()
     {
-        anim.SetBool("Dash", false);
+        dashTimer -= Time.deltaTime;
+        if (dashTimer <= 0)
+        {
+            isDashing = false;
+        }
     }
 
-    // ===== ATAQUE SIMPLE =====
-    private void Attack()
-    {
-        // Solo permitir atacar si NO esta atacando actualmente
-        if (isAttacking) return;
+    // ============================================
+    // PARED
+    // ============================================
 
-        // Detectar presion de tecla Z
-        if (Input.GetKeyDown(KeyCode.Z))
+    private void HandleWallCling()
+    {
+        // CORREGIDO: Solo hacer wall slide si:
+        // 1. No estamos en suelo
+        // 2. Tocamos pared
+        // 3. Estamos presionando HACIA la pared
+        // 4. No estamos en lockeo de wall jump
+        bool isPressingTowardsWall = Mathf.Abs(horizontalInput) > inputDeadzone &&
+                                     Mathf.Sign(horizontalInput) == (facingRight ? 1 : -1);
+
+        isWallSliding = !isGrounded && isTouchingWall && isPressingTowardsWall && wallJumpLockTimer <= 0;
+
+        if (isWallSliding)
         {
-            // ATAQUES EN TIERRA (alternan entre ataque 1 y 2)
-            if (EstaEnSuelo())
+            // Resetear doble salto mientras nos deslizamos
+            hasDoubleJumped = false;
+
+            // Deslizamiento rápido o normal
+            if (isFastWallSliding)
             {
-                // Alternar entre ataque 1 y 2
-                if (currentCombo == 0 || currentCombo == 2)
-                {
-                    StartAttack(1); // Primer ataque
-                    currentCombo = 1;
-                }
-                else
-                {
-                    StartAttack(2); // Segundo ataque
-                    currentCombo = 2;
-                }
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x, -wallSlideFastSpeed);
             }
-            // ATAQUES EN EL AIRE (siempre usa ataque 1)
-            // El animator diferencia con el parametro Grounded o SpeedY
             else
             {
-                StartAttack(1); // Usar ataque 1 en el aire
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x,
+                    Mathf.Clamp(rb.linearVelocity.y, -wallSlideSpeed, float.MaxValue));
+            }
+
+            rb.gravityScale = wallGravity;
+
+            // Fast slide
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                StartCoroutine(FastWallSlideCoroutine());
+            }
+        }
+        else
+        {
+            // Solo restaurar gravedad si no estamos en wall slide
+            if (!isWallSliding && rb.gravityScale == wallGravity)
+            {
+                rb.gravityScale = originalGravity;
+            }
+            isFastWallSliding = false;
+        }
+    }
+
+    private IEnumerator FastWallSlideCoroutine()
+    {
+        isFastWallSliding = true;
+        yield return new WaitForSeconds(dashDuration);
+        isFastWallSliding = false;
+    }
+
+    // ============================================
+    // COMBATE
+    // ============================================
+
+    private void UpdateAttackStepTimer()
+    {
+        // Si estamos atacando y el delay no ha terminado
+        if (isAttacking && attackDelayTimer > 0)
+        {
+            attackDelayTimer -= Time.deltaTime;
+
+            // Cuando el delay termina, activar el empuje
+            if (attackDelayTimer <= 0 && !attackStepActive)
+            {
+                attackStepActive = true;
+                attackMoveTimer = attackStepDuration;
             }
         }
     }
 
-    // Iniciar un ataque
-    private void StartAttack(int attackIndex)
+    private void HandleAttack()
     {
-        // Marcar como atacando
-        isAttacking = true;
+        // CORREGIDO: Verificar tanto isAttacking como el cooldown
+        if (isAttacking || Time.time < lastAttackTime + attackCooldown) return;
 
-        // Activar parametros del animator
-        anim.SetBool("isAttacking", true);
-        anim.SetInteger("ComboIndex", attackIndex);
-
-        // EMPUJE HACIA ADELANTE (reducido para que no se trabe)
-        float direction = transform.localScale.x;
-        // Usar velocidad baja para evitar trabarse con el suelo
-        rb.linearVelocity = new Vector2(direction * attackStepForce * 0.5f, rb.linearVelocity.y);
-
-        // Obtener duracion de la animacion
-        float attackDuration = EstaEnSuelo() ? attackGroundDuration : attackAirDuration;
-
-        // Timer automatico para terminar
-        StartCoroutine(AutoStopAttack(attackDuration));
-    }
-
-    // Funcion publica para terminar ataque
-    public void StopAttacking()
-    {
-        if (!isAttacking) return;
-
-        anim.SetBool("isAttacking", false);
-        // NO resetear ComboIndex aqui - se mantiene para el proximo ataque
-        isAttacking = false;
-
-        // Actualizar Grounded ahora que termino el ataque
-        anim.SetBool("Grounded", EstaEnSuelo());
-    }
-
-    // Timer automatico que termina el ataque
-    private IEnumerator AutoStopAttack(float duration)
-    {
-        yield return new WaitForSeconds(duration);
-        if (isAttacking)
+        if (Input.GetKeyDown(KeyCode.Z))
         {
-            StopAttacking();
+            if (isGrounded)
+            {
+                // Sistema de combo alternado: 1 -> 2 -> 1 -> 2
+                currentCombo = (currentCombo == 1) ? 2 : 1;
+                StartAttack(currentCombo);
+            }
+            else
+            {
+                // Ataque aéreo (siempre combo 1)
+                StartAttack(1);
+            }
         }
     }
 
-    // ===== LANZAR PROYECTILES =====
-    private void LanzarProyectil()
+    private void StartAttack(int comboIndex)
     {
-        // Verificar si presiono C Y ya paso el cooldown
+        isAttacking = true;
+        lastAttackTime = Time.time; // NUEVO: Registrar tiempo del ataque
+        animController.SetComboIndex(comboIndex);
+
+        // Reiniciar timers
+        attackDelayTimer = attackStepDelay;
+        attackStepActive = false;
+        attackMoveTimer = 0;
+
+        float duration = isGrounded ? attackGroundDuration : attackAirDuration;
+        StartCoroutine(AttackCoroutine(duration));
+    }
+
+    private IEnumerator AttackCoroutine(float duration)
+    {
+        yield return new WaitForSeconds(duration);
+        StopAttack();
+    }
+
+    private void StopAttack()
+    {
+        isAttacking = false;
+        attackDelayTimer = 0;
+        attackMoveTimer = 0;
+        attackStepActive = false;
+        // NO resetear currentCombo aquí - mantiene el estado para el siguiente ataque
+    }
+
+    // Este método ya no hace nada, pero lo dejamos por compatibilidad con animaciones
+    public void OnAttackHitFrame()
+    {
+        // El empuje ahora se maneja en FixedUpdate con attackMoveTimer
+    }
+
+    public void TakeDamage(Vector2 attackerPosition)
+    {
+        isTakingDamage = true;
+        animController.TriggerDamage();
+
+        Vector2 knockbackDirection = ((Vector2)transform.position - attackerPosition).normalized;
+        float minKnockbackY = 0.5f;
+        float maxKnockbackY = 1f;
+        knockbackDirection.y = Mathf.Clamp(knockbackDirection.y + minKnockbackY, minKnockbackY, maxKnockbackY);
+
+        rb.linearVelocity = Vector2.zero;
+        rb.AddForce(knockbackDirection * knockbackForce, ForceMode2D.Impulse);
+
+        StartCoroutine(DamageRecoveryCoroutine());
+    }
+
+    private IEnumerator DamageRecoveryCoroutine()
+    {
+        yield return new WaitForSeconds(damageRecoveryTime);
+        isTakingDamage = false;
+        animController.StopDamage();
+    }
+
+    // ============================================
+    // PROYECTILES
+    // ============================================
+
+    private void HandleProjectile()
+    {
         if (Input.GetKeyDown(KeyCode.C) && Time.time > lastProjectileTime + projectileCooldown)
         {
-            // Verificar que existan los objetos necesarios
             if (projectilePrefab != null && projectileSpawnPoint != null)
             {
-                // Registrar momento del lanzamiento
                 lastProjectileTime = Time.time;
-                // Instanciar proyectil en la posicion del spawn point
-                GameObject projectile = Instantiate(projectilePrefab, projectileSpawnPoint.position, Quaternion.identity);
 
-                // Obtener rigidbody del proyectil
+                GameObject projectile = Instantiate(projectilePrefab,
+                    projectileSpawnPoint.position, Quaternion.identity);
+
                 Rigidbody2D projectileRb = projectile.GetComponent<Rigidbody2D>();
                 if (projectileRb != null)
                 {
-                    // Calcular direccion (donde mira el jugador)
-                    float direction = transform.localScale.x;
-                    // Aplicar velocidad al proyectil
+                    float direction = facingRight ? 1f : -1f;
                     projectileRb.linearVelocity = new Vector2(direction * projectileSpeed, 0);
                 }
 
-                // Activar animacion de lanzar
-                anim.SetTrigger("Throw");
+                animController.TriggerThrow();
             }
         }
     }
 
-    // ===== BLOQUEO =====
-    public void Bloqueo()
+    // ============================================
+    // PROPIEDADES PUBLICAS (para animaciones)
+    // ============================================
+
+    public bool IsGrounded => isGrounded;
+    public bool IsTouchingWall => isTouchingWall;
+    public bool IsAttacking => isAttacking;
+    public bool IsDashing => isDashing;
+    public bool IsTakingDamage => isTakingDamage;
+    public float HorizontalInput => horizontalInput;
+    public float VerticalVelocity => rb.linearVelocity.y;
+    public bool IsBlocking => Input.GetKey(KeyCode.X);
+    public bool IsWallSliding => isWallSliding; // NUEVO: para animaciones
+    public bool IsSprinting => Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl); // NUEVO: para animaciones
+
+    // ============================================
+    // GIZMOS
+    // ============================================
+
+    private void OnDrawGizmosSelected()
     {
-        if (puedeBloquear)
-        {
-            // Mantener presionado X para bloquear
-            if (Input.GetKey(KeyCode.X))
-            {
-                anim.SetBool("isBlocking", true);
-            }
-            else
-            {
-                anim.SetBool("isBlocking", false);
-            }
-        }
-    }
-
-    // ===== DAÑO =====
-    // Funcion publica llamada cuando el jugador recibe daño
-    public void RecibirDaño(Vector2 atacantePosicion)
-    {
-        // Activar flag de daño (bloquea controles)
-        recibiodaño = true;
-
-        // CALCULAR DIRECCION DEL KNOCKBACK
-        // Obtener vector desde atacante hacia jugador
-        Vector2 knockDir = (transform.position - (Vector3)atacantePosicion).normalized;
-        // Asegurar que tenga componente vertical minima (siempre salta un poco)
-        knockDir.y = Mathf.Clamp(knockDir.y + 0.5f, 0.5f, 1f);
-
-        // Resetear velocidad
-        SetVelocityX(0);
-        // Aplicar fuerza de empuje
-        rb.AddForce(knockDir * impulseForce, ForceMode2D.Impulse);
-
-        // Iniciar coroutine para resetear flag de daño
-        StartCoroutine(ResetRecibioDano());
-    }
-
-    // Coroutine que resetea el flag de daño despues de un tiempo
-    private IEnumerator ResetRecibioDano()
-    {
-        yield return new WaitForSeconds(0.5f);
-        recibiodaño = false;
-    }
-
-    // ===== ANIMACIONES =====
-    // Actualizar parametros del animator cada frame
-    private void ActualizarAnimaciones()
-    {
-        // Velocidad vertical para blend trees de salto/caida
-        anim.SetFloat("SpeedY", rb.linearVelocity.y);
-
-        // NO actualizar Grounded si esta atacando (evita cancelar animacion aereas)
-        if (!isAttacking)
-        {
-            anim.SetBool("Grounded", EstaEnSuelo());
-        }
-
-        // Flag de caida (true si no esta en suelo Y esta cayendo)
-        anim.SetBool("Falling", !EstaEnSuelo() && rb.linearVelocity.y < -0.1f);
-    }
-
-    // ===== GIZMOS =====
-    // Dibuja lineas en el editor para visualizar los raycasts
-    private void OnDrawGizmos()
-    {
-        // Rayo de deteccion de suelo (rojo)
+        // Raycast de suelo
         if (groundCheck != null)
         {
-            Gizmos.color = Color.red;
-            Gizmos.DrawLine(groundCheck.position, groundCheck.position + Vector3.down * longitudRayo);
+            Vector2 origin = groundCheck.position;
+            Vector2 direction = Vector2.down;
+            float distance = groundCheckRay;
+
+            RaycastHit2D hit = Physics2D.Raycast(origin, direction, distance, groundLayer);
+            Gizmos.color = hit.collider != null ? Color.green : Color.red;
+            Gizmos.DrawLine(origin, origin + direction * distance);
         }
 
-        // Rayo de deteccion de pared (azul)
+        // Raycast de pared
         if (wallCheck != null)
         {
-            Gizmos.color = Color.blue;
-            Gizmos.DrawLine(wallCheck.position, wallCheck.position + Vector3.right * transform.localScale.x * longitudRayo);
+            Vector2 dir = facingRight ? Vector2.right : Vector2.left;
+            bool wall = Physics2D.Raycast(wallCheck.position, dir, wallCheckDistance, wallLayer);
+            Gizmos.color = wall ? Color.blue : Color.yellow;
+            Gizmos.DrawRay(wallCheck.position, (Vector3)dir * wallCheckDistance);
         }
     }
-    
-    }
+}

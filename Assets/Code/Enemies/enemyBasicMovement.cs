@@ -104,7 +104,7 @@ public class enemyBasicMovement : MonoBehaviour
             if (playerLife != null)
             {
                 Vector2 direccionDanio = new Vector2(transform.position.x, 0);
-                playerLife.RecibeDano(direccionDanio, 1);
+                playerLife.TakeDamage(direccionDanio, 1);
             }
         }
     }

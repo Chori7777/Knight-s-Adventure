@@ -41,11 +41,14 @@ GameObject:
   m_Component:
   - component: {fileID: 1776710345640356568}
   - component: {fileID: 988187615517789785}
-  - component: {fileID: 5419059314384228200}
   - component: {fileID: 8063530325838669568}
+  - component: {fileID: 7134106177684360171}
+  - component: {fileID: 3639976318873108436}
+  - component: {fileID: 5419059314384228200}
   - component: {fileID: 1388570725669603576}
   - component: {fileID: 7234856735944502852}
-  - component: {fileID: 7134106177684360171}
+  - component: {fileID: 3935386594159636164}
+  - component: {fileID: 7162524510826510117}
   m_Layer: 7
   m_Name: Hero
   m_TagString: Player
@@ -113,7 +116,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 1262583705
-  m_SortingLayer: 5
+  m_SortingLayer: 6
   m_SortingOrder: 0
   m_Sprite: {fileID: 2743055858919256353, guid: 4691816a068c7e44c9317d20077349a2, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -126,6 +129,120 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &8063530325838669568
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5671156133088508336}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2d4983d86d72a74f95953170d4dd3f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 5
+  currentHealth: 5
+  maxPotions: 5
+  currentPotions: 3
+  potionHealAmount: 1
+  potionCooldown: 0.5
+  invincibilityDuration: 1
+  usePotionKey: 114
+--- !u!114 &7134106177684360171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5671156133088508336}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 65a050c4f09bacc4bb1d205501a3d82a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  groundCheck: {fileID: 8912768487357915013}
+  wallCheck: {fileID: 3176949573638936446}
+  projectileSpawnPoint: {fileID: 0}
+  projectilePrefab: {fileID: 0}
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 512
+  wallLayer:
+    serializedVersion: 2
+    m_Bits: 1024
+  moveSpeed: 5
+  blockMoveSpeed: 2
+  sprintMultiplier: 1.5
+  isSprintMode: 1
+  jumpForce: 12
+  doubleJumpForce: 10
+  fallMultiplier: 2.5
+  lowJumpMultiplier: 1.2
+  coyoteTime: 0.15
+  jumpBufferTime: 0.1
+  dashSpeed: 11
+  dashDuration: 0.15
+  dashCooldown: 0.5
+  wallSlideSpeed: 2
+  wallSlideFastSpeed: 6
+  wallJumpForce: {x: 10, y: 12}
+  wallGravity: 0.5
+  wallJumpLockTime: 0.2
+  attackStepSpeed: 5
+  attackStepDelay: 0.15
+  attackStepDuration: 0.1
+  attackGroundDuration: 0.4
+  attackAirDuration: 0.4
+  attackCooldown: 0.1
+  knockbackForce: 10
+  damageRecoveryTime: 0.5
+  projectileSpeed: 10
+  projectileCooldown: 0.5
+  canMove: 1
+  canJump: 1
+  canDoubleJump: 1
+  canAttack: 1
+  canDash: 1
+  canWallCling: 1
+  canBlock: 1
+  canThrowProjectile: 1
+  groundCheckRay: 3.2
+  wallCheckDistance: 0.47
+  inputDeadzone: 0.1
+  isTakingDamage: 0
+--- !u!114 &3639976318873108436
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5671156133088508336}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9b2667ee0a09fd40acaf199e335a9a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  potionText: {fileID: 0}
+  swordHandle: {fileID: 0}
+  swordMiddleParts: []
+  swordTip: {fileID: 0}
+  handleFullSprite: {fileID: 0}
+  middleFullSprite: {fileID: 0}
+  tipFullSprite: {fileID: 0}
+  handleEmptySprite: {fileID: 0}
+  middleEmptySprite: {fileID: 0}
+  tipEmptySprite: {fileID: 0}
+  knightImage: {fileID: 0}
+  knightHeadImage: {fileID: 0}
+  knight5HealthSprite: {fileID: 0}
+  knight4HealthSprite: {fileID: 0}
+  knight3HealthSprite: {fileID: 0}
+  knight2HealthSprite: {fileID: 0}
+  knight1HealthSprite: {fileID: 0}
+  knightMoveDistancePerHealth: 50
+  headOffsetX: 60
+  headOffsetY: 0
 --- !u!50 &5419059314384228200
 Rigidbody2D:
   serializedVersion: 5
@@ -153,48 +270,6 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
---- !u!114 &8063530325838669568
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5671156133088508336}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e2d4983d86d72a74f95953170d4dd3f1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  health: 5
-  maxHealth: 5
-  recibiendoDmg: 0
-  botellaVida: 3
-  maxbotellaVida: 5
-  cantidadVida: {fileID: 0}
-  invencibilityCooldown: 1
-  potionCooldown: 0.5
-  swordHandle: {fileID: 0}
-  swordMiddle:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  swordTip: {fileID: 0}
-  knightHead: {fileID: 0}
-  knightSprite: {fileID: 0}
-  knight5Health: {fileID: 7145198348311737387, guid: 54bfecb9a47a16b428cd0c0c9525dae2, type: 3}
-  knight4Health: {fileID: -3708508325519384304, guid: 54bfecb9a47a16b428cd0c0c9525dae2, type: 3}
-  knight3Health: {fileID: 3106341853739790030, guid: 54bfecb9a47a16b428cd0c0c9525dae2, type: 3}
-  knight2Health: {fileID: 94058731202090889, guid: 54bfecb9a47a16b428cd0c0c9525dae2, type: 3}
-  knight1Health: {fileID: 1222221480408444849, guid: 54bfecb9a47a16b428cd0c0c9525dae2, type: 3}
-  knightMoveDistance: 127
-  headOffsetX: 30
-  headOffsetY: 0
-  handleFull: {fileID: 8637241276000059570, guid: 2bb9c450dfa2c684d864703b201acc3c, type: 3}
-  middleFull: {fileID: -513770020, guid: 2bb9c450dfa2c684d864703b201acc3c, type: 3}
-  tipFull: {fileID: 154358765, guid: 2bb9c450dfa2c684d864703b201acc3c, type: 3}
-  handleEmpty: {fileID: 6272732809257836685, guid: e26acde59792e7945a690c465c85c075, type: 3}
-  middleEmpty: {fileID: 94815371, guid: e26acde59792e7945a690c465c85c075, type: 3}
-  tipEmpty: {fileID: -2024096495, guid: e26acde59792e7945a690c465c85c075, type: 3}
 --- !u!95 &1388570725669603576
 Animator:
   serializedVersion: 7
@@ -263,7 +338,7 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.86371464, y: 1.0688109}
   m_EdgeRadius: 0
---- !u!114 &7134106177684360171
+--- !u!114 &3935386594159636164
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -272,49 +347,41 @@ MonoBehaviour:
   m_GameObject: {fileID: 5671156133088508336}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 65a050c4f09bacc4bb1d205501a3d82a, type: 3}
+  m_Script: {fileID: 11500000, guid: 8d8c19ea4e883894784319ea84678f1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  groundCheck: {fileID: 8912768487357915013}
-  wallCheck: {fileID: 3176949573638936446}
-  projectileSpawnPoint: {fileID: 0}
-  projectilePrefab: {fileID: 0}
-  speed: 5
-  fuerzaSalto: 8
-  fuerzaSaltoDoble: 7
-  impulseForce: 7
-  dashSpeed: 11
-  dashTime: 0.15
-  dashCooldown: 0.5
-  wallSlideSpeed: 2
-  longitudRayo: 0.82
-  capaSuelo:
-    serializedVersion: 2
-    m_Bits: 512
-  capaPared:
-    serializedVersion: 2
-    m_Bits: 1024
-  wallGravity: 0.5
-  wallJumpForce: {x: 10, y: 12}
-  wallSlideFastSpeed: 6
-  wallSlideKey: 115
-  fallMultiplier: 2.5
-  lowJumpMultiplier: 1.2
-  puedeMoverse: 1
-  puedeSaltar: 1
-  puedeDobleSalto: 1
-  puedeAtacar: 1
-  puedeDash: 1
-  puedeWallCling: 0
-  puedeBloquear: 0
-  puedeLanzar: 1
-  attackStepForce: 3
-  attackGroundDuration: 0.4
-  attackAirDuration: 0.4
-  projectileSpeed: 10
-  projectileCooldown: 0.5
-  shieldMoveSpeed: 2
-  "recibioda\xF1o": 0
+--- !u!114 &7162524510826510117
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5671156133088508336}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9b2667ee0a09fd40acaf199e335a9a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  potionText: {fileID: 0}
+  swordHandle: {fileID: 0}
+  swordMiddleParts: []
+  swordTip: {fileID: 0}
+  handleFullSprite: {fileID: 0}
+  middleFullSprite: {fileID: 0}
+  tipFullSprite: {fileID: 0}
+  handleEmptySprite: {fileID: 0}
+  middleEmptySprite: {fileID: 0}
+  tipEmptySprite: {fileID: 0}
+  knightImage: {fileID: 0}
+  knightHeadImage: {fileID: 0}
+  knight5HealthSprite: {fileID: 0}
+  knight4HealthSprite: {fileID: 0}
+  knight3HealthSprite: {fileID: 0}
+  knight2HealthSprite: {fileID: 0}
+  knight1HealthSprite: {fileID: 0}
+  knightMoveDistancePerHealth: 50
+  headOffsetX: 60
+  headOffsetY: 0
 --- !u!1 &6035785815265924650
 GameObject:
   m_ObjectHideFlags: 0

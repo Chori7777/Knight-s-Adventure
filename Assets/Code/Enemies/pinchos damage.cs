@@ -16,7 +16,7 @@ public class Pinchos : MonoBehaviour
             if (vida != null)
             {
                 // Aplicar daño con tu sistema
-                vida.RecibeDano(transform.position, daño);
+                vida.TakeDamage(transform.position, daño);
 
                 // Empujar hacia arriba (para evitar que quede trabado)
                 if (rb != null)

@@ -1,406 +1,339 @@
-using TMPro;
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
+
+// ============================================
+// SISTEMA DE VIDA DEL JUGADOR
+// ============================================
 
 public class playerLife : MonoBehaviour
 {
-    public int health = 5;
-    public int maxHealth = 5;
-    public bool recibiendoDmg;
-    public int botellaVida = 3;
-    public int maxbotellaVida = 5;
+    // ============================================
+    // COMPONENTES
+    // ============================================
+    private Animator anim;
+    private PlayerMovement controller;
+    private PlayerHealthUI healthUI;
 
-    public TextMeshProUGUI cantidadVida;
-    Animator anim;
+    // ============================================
+    // VIDA
+    // ============================================
+    [Header("Vida")]
+    [SerializeField] private int maxHealth = 5;
+    [SerializeField] private int currentHealth = 5;
 
-    [Header("Cooldown")]
-    [SerializeField] private float invencibilityCooldown = 1f;
-    private float lastDamageTime = -1f;
+    public int Health => currentHealth;
+    public int MaxHealth => maxHealth;
 
+    // ============================================
+    // POCIONES
+    // ============================================
     [Header("Pociones")]
+    [SerializeField] private int maxPotions = 5;
+    [SerializeField] private int currentPotions = 3;
+    [SerializeField] private int potionHealAmount = 1;
     [SerializeField] private float potionCooldown = 0.5f;
+
     private float lastPotionTime = -1f;
 
-    [Header("UI - Espada")]
-    public Image swordHandle;
-    public Image[] swordMiddle;
-    public Image swordTip;
-    public Image knightHead;
+    public int Potions => currentPotions;
+    public int MaxPotions => maxPotions;
 
-    [Header("UI - Caballero")]
-    public Image knightSprite;
-    [SerializeField] private Sprite knight5Health;
-    [SerializeField] private Sprite knight4Health;
-    [SerializeField] private Sprite knight3Health;
-    [SerializeField] private Sprite knight2Health;
-    [SerializeField] private Sprite knight1Health;
+    // ============================================
+    // DAÃ‘O
+    // ============================================
+    [Header("Sistema de DaÃ±o")]
+    [SerializeField] private float invincibilityDuration = 1f;
 
-    [Header("Posición del Caballero")]
-    [SerializeField] private float knightMoveDistance = 50f;
+    private float lastDamageTime = -1f;
+    private bool isTakingDamage;
 
-    [Header("Posición de la Cabeza")]
-    [SerializeField] private float headOffsetX = 60f;
-    [SerializeField] private float headOffsetY = 0f;
+    public bool IsTakingDamage => isTakingDamage;
 
-    [Header("Sprites - Espada Llena")]
-    [SerializeField] private Sprite handleFull;
-    [SerializeField] private Sprite middleFull;
-    [SerializeField] private Sprite tipFull;
+    // ============================================
+    // TECLAS
+    // ============================================
+    [Header("Controles")]
+    [SerializeField] private KeyCode usePotionKey = KeyCode.R;
 
-    [Header("Sprites - Espada Vacía")]
-    [SerializeField] private Sprite handleEmpty;
-    [SerializeField] private Sprite middleEmpty;
-    [SerializeField] private Sprite tipEmpty;
+    // ============================================
+    // INICIALIZACION
+    // ============================================
 
-    private PlayerMovement controlador;
-
-    void Awake()
+    private void Awake()
     {
-        health = maxHealth;
-        UpdateHealthUI();
-        controlador = GetComponent<PlayerMovement>();
+        InitializeComponents();
+        InitializeHealth();
     }
 
-    void Start()
+    private void Start()
     {
         anim = GetComponent<Animator>();
-        ActualizarTexto();
     }
+
+    private void InitializeComponents()
+    {
+        controller = GetComponent<PlayerMovement>();
+        healthUI = GetComponent<PlayerHealthUI>();
+
+        if (healthUI == null)
+        {
+            healthUI = gameObject.AddComponent<PlayerHealthUI>();
+        }
+
+        healthUI.Initialize(this);
+    }
+
+    private void InitializeHealth()
+    {
+        currentHealth = maxHealth;
+        UpdateUI();
+    }
+
+    // ============================================
+    // UPDATE
+    // ============================================
 
     private void Update()
     {
-        // Actualizar UI de pociones cada frame
-        ActualizarTexto();
+        HandlePotionInput();
+    }
 
-        // Detectar presion de tecla E para usar pocion (GetKeyDown = solo una vez)
-        if (Input.GetKeyDown(KeyCode.R))
+    // ============================================
+    // INPUT
+    // ============================================
+
+    private void HandlePotionInput()
+    {
+        if (Input.GetKeyDown(usePotionKey))
         {
-            UsarPocion();
+            TryUsePotion();
         }
     }
 
-    // Usar una pocion cuando presione E
-    private void UsarPocion()
+    // ============================================
+    // SISTEMA DE POCIONES
+    // ============================================
+
+    private void TryUsePotion()
     {
-        // Verificar cooldown
+        if (!CanUsePotion())
+        {
+            return;
+        }
+
+        UsePotion();
+    }
+
+    private bool CanUsePotion()
+    {
         if (Time.time - lastPotionTime < potionCooldown)
         {
-            Debug.Log("Pocion en cooldown");
-            return;
+            Debug.Log("â±ï¸ PociÃ³n en cooldown");
+            return false;
         }
 
-        // Verificar si tiene pociones
-        if (botellaVida <= 0)
+        if (currentPotions <= 0)
         {
-            Debug.Log("No tienes pociones");
-            return;
+            Debug.Log("âŒ No tienes pociones");
+            return false;
         }
 
-        // Verificar si ya tiene salud maxima
-        if (health >= maxHealth)
+        if (currentHealth >= maxHealth)
         {
-            Debug.Log("Ya tienes salud maxima");
-            return;
+            Debug.Log("ðŸ’š Ya tienes salud mÃ¡xima");
+            return false;
         }
 
-        // Usar pocion
-        botellaVida--;
-        health++;
+        return true;
+    }
+
+    private void UsePotion()
+    {
+        currentPotions--;
+        currentHealth = Mathf.Min(currentHealth + potionHealAmount, maxHealth);
         lastPotionTime = Time.time;
 
-        Debug.Log("Pocion usada. Salud: " + health + " | Pociones: " + botellaVida);
-        UpdateHealthUI();
+        UpdateUI();
+        Debug.Log($"ðŸ§ª PociÃ³n usada | Salud: {currentHealth}/{maxHealth} | Pociones: {currentPotions}/{maxPotions}");
     }
 
-    // Actualizar texto de pociones en UI
-    public void ActualizarTexto()
+    public void AddPotion(int amount = 1)
     {
-        if (cantidadVida != null)
-        {
-            cantidadVida.text = botellaVida.ToString() + "/" + maxbotellaVida.ToString();
-        }
-
-        // Limitar pociones al maximo
-        if (botellaVida > maxbotellaVida)
-        {
-            botellaVida = maxbotellaVida;
-        }
+        currentPotions = Mathf.Min(currentPotions + amount, maxPotions);
+        UpdateUI();
+        Debug.Log($"ðŸ§ª PociÃ³n recogida | Total: {currentPotions}/{maxPotions}");
     }
 
-    public void RecibeDano(Vector2 atacantePosicion, int damage)
+    // ============================================
+    // SISTEMA DE DAÃ‘O
+    // ============================================
+
+    public void TakeDamage(Vector2 attackerPosition, int damage)
     {
-        // Verificar si está en cooldown de invencibilidad
-        if (Time.time - lastDamageTime < invencibilityCooldown)
+        if (!CanTakeDamage())
         {
-            Debug.Log("En cooldown de invencibilidad");
             return;
         }
 
-        if (health <= 0) return;
+        ApplyDamage(damage);
+        ApplyKnockback(attackerPosition);
+        PlayDamageAnimation();
 
-        lastDamageTime = Time.time;
-        health -= damage;
-        if (health < 0) health = 0;
-        Debug.Log("player health: " + health);
-        UpdateHealthUI();
-
-        if (controlador != null)
+        if (currentHealth <= 0)
         {
-            controlador.RecibirDaño(atacantePosicion);
-        }
-
-        anim.SetBool("damage", true);
-        recibiendoDmg = true;
-
-        if (health <= 0)
-        {
-            anim.SetBool("damage", false);
-            anim.SetTrigger("Death");
-            if (controlador != null)
-            {
-                controlador.puedeMoverse = false;
-                controlador.puedeSaltar = false;
-                controlador.puedeAtacar = false;
-                controlador.puedeDash = false;
-                controlador.puedeWallCling = false;
-                controlador.puedeBloquear = false;
-            }
+            Die();
         }
     }
 
-    public void Die()
+    private bool CanTakeDamage()
+    {
+        if (Time.time - lastDamageTime < invincibilityDuration)
+        {
+            Debug.Log(" Invencibilidad activa");
+            return false;
+        }
+
+        if (currentHealth <= 0)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private void ApplyDamage(int damage)
+    {
+        lastDamageTime = Time.time;
+        currentHealth -= damage;
+        currentHealth = Mathf.Max(currentHealth, 0);
+
+        UpdateUI();
+        Debug.Log($" DaÃ±o recibido: {currentHealth}");
+    }
+
+    private void ApplyKnockback(Vector2 attackerPosition)
+    {
+        if (controller != null)
+        {
+            controller.TakeDamage(attackerPosition);
+        }
+    }
+
+    private void PlayDamageAnimation()
+    {
+        anim.SetBool("damage", true);
+        isTakingDamage = true;
+    }
+
+    private void Die()
+    {
+        anim.SetBool("damage", false);
+        anim.SetTrigger("Death");
+        DisableAllControls();
+        Debug.Log(" Jugador muerto");
+    }
+
+    private void DisableAllControls()
+    {
+        if (controller != null)
+        {
+            controller.canMove = false;
+            controller.canJump = false;
+            controller.canAttack = false;
+            controller.canDash = false;
+            controller.canWallCling = false;
+            controller.canBlock = false;
+        }
+    }
+
+    public void OnDeathAnimationComplete()
     {
         Destroy(gameObject);
         SceneManager.LoadScene("GameOver");
     }
 
-    public void StopDmg()
+    public void StopDamageAnimation()
     {
         anim.SetBool("damage", false);
-        if (controlador != null)
-            controlador.recibiodaño = false;
+        isTakingDamage = false;
     }
+
+    // ============================================
+    // CURACION
+    // ============================================
+
+    public void Heal(int amount)
+    {
+        currentHealth = Mathf.Min(currentHealth + amount, maxHealth);
+        UpdateUI();
+        Debug.Log($" CuraciÃ³n {currentHealth}");
+    }
+
+    public void HealFull()
+    {
+        currentHealth = maxHealth;
+        UpdateUI();
+        Debug.Log($"âœ¨ CuraciÃ³n completa | Salud: {currentHealth}/{maxHealth}");
+    }
+
+    // ============================================
+    // COLISIONES
+    // ============================================
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        Debug.Log("Colisioné con: " + collision.gameObject.name + " - Tag: " + collision.tag);
+        if (collision.CompareTag("HealthPotion"))
+        {
+            AddPotion();
+            Destroy(collision.gameObject);
+        }
 
         if (collision.CompareTag("Consumable"))
         {
             Destroy(collision.gameObject);
-            UpdateHealthUI();
-        }
-
-        if (collision.CompareTag("HealthPotion"))
-        {
-            botellaVida = Mathf.Min(botellaVida + 1, maxbotellaVida);
-            Destroy(collision.gameObject);
-            ActualizarTexto();
-            Debug.Log("Pocion recogida. Total: " + botellaVida);
+            UpdateUI();
         }
     }
 
-    void UpdateHealthUI()
+    // ============================================
+    // UI
+    // ============================================
+
+    private void UpdateUI()
     {
-        // Determinar estado del caballero
-        KnightState state = GetKnightState();
-
-        // Actualizar sprite del caballero
-        UpdateKnightSprite(state);
-
-        // Actualizar sprite de la cabeza del caballero
-        UpdateKnightHead(state);
-
-        // Actualizar sprites de la espada
-        UpdateSwordSprites(state);
-
-        // Actualizar posición de la cabeza
-        UpdateKnightHeadPosition();
-
-        // Actualizar posición del caballero en el HUD
-        UpdateKnightPosition();
+        if (healthUI != null)
+        {
+            healthUI.UpdateDisplay();
+        }
     }
 
-    private KnightState GetKnightState()
+    // ============================================
+    // METODOS PUBLICOS PARA GUARDADO
+    // ============================================
+
+    public void SetHealth(int health)
     {
-        switch (health)
-        {
-            case 5:
-                return KnightState.Health5;
-            case 4:
-                return KnightState.Health4;
-            case 3:
-                return KnightState.Health3;
-            case 2:
-                return KnightState.Health2;
-            case 1:
-                return KnightState.Health1;
-            default:
-                return KnightState.Health1;
-        }
+        currentHealth = Mathf.Clamp(health, 0, maxHealth);
+        UpdateUI();
     }
 
-    private void UpdateKnightSprite(KnightState state)
+    public void SetMaxHealth(int max)
     {
-        if (knightSprite != null)
-        {
-            switch (state)
-            {
-                case KnightState.Health5:
-                    knightSprite.sprite = knight5Health;
-                    break;
-                case KnightState.Health4:
-                    knightSprite.sprite = knight4Health;
-                    break;
-                case KnightState.Health3:
-                    knightSprite.sprite = knight3Health;
-                    break;
-                case KnightState.Health2:
-                    knightSprite.sprite = knight2Health;
-                    break;
-                case KnightState.Health1:
-                    knightSprite.sprite = knight1Health;
-                    break;
-            }
-        }
+        maxHealth = max;
+        currentHealth = Mathf.Min(currentHealth, maxHealth);
+        UpdateUI();
     }
 
-    private void UpdateKnightHead(KnightState state)
+    public void SetPotions(int potions)
     {
-        if (knightHead != null)
-        {
-            switch (state)
-            {
-                case KnightState.Health5:
-                    knightHead.sprite = knight5Health;
-                    break;
-                case KnightState.Health4:
-                    knightHead.sprite = knight4Health;
-                    break;
-                case KnightState.Health3:
-                    knightHead.sprite = knight3Health;
-                    break;
-                case KnightState.Health2:
-                    knightHead.sprite = knight2Health;
-                    break;
-                case KnightState.Health1:
-                    knightHead.sprite = knight1Health;
-                    break;
-            }
-        }
+        currentPotions = Mathf.Clamp(potions, 0, maxPotions);
+        UpdateUI();
     }
 
-    private void UpdateSwordSprites(KnightState state)
+    public void SetMaxPotions(int max)
     {
-        // Calcular cuántos segmentos activos hay
-        int activeParts = health;
-
-        // Actualizar punta (desaparece primero)
-        if (swordTip != null)
-        {
-            if (health >= maxHealth)
-            {
-                swordTip.enabled = true;
-                swordTip.sprite = tipFull;
-            }
-            else
-            {
-                swordTip.enabled = true;
-                swordTip.sprite = tipEmpty;
-            }
-        }
-
-        // Actualizar partes del medio
-        if (swordMiddle != null && swordMiddle.Length > 0)
-        {
-            for (int i = 0; i < swordMiddle.Length; i++)
-            {
-                if (swordMiddle[i] != null)
-                {
-                    int threshold = maxHealth - 2 - i;
-
-                    if (health > threshold)
-                    {
-                        swordMiddle[i].enabled = true;
-                        swordMiddle[i].sprite = middleFull;
-                    }
-                    else
-                    {
-                        swordMiddle[i].enabled = true;
-                        swordMiddle[i].sprite = middleEmpty;
-                    }
-                }
-            }
-        }
-
-        // Actualizar mango (desaparece al final)
-        if (swordHandle != null)
-        {
-            if (health > 0)
-            {
-                swordHandle.enabled = true;
-                swordHandle.sprite = handleFull;
-            }
-            else
-            {
-                swordHandle.enabled = true;
-                swordHandle.sprite = handleEmpty;
-            }
-        }
+        maxPotions = max;
+        currentPotions = Mathf.Min(currentPotions, maxPotions);
+        UpdateUI();
     }
-
-    private void UpdateKnightHeadPosition()
-    {
-        if (knightHead != null && swordMiddle != null && swordMiddle.Length > 0)
-        {
-            int segmentIndex = (maxHealth - health) - 2;
-
-            RectTransform headRect = knightHead.GetComponent<RectTransform>();
-            if (headRect != null)
-            {
-                if (segmentIndex >= 0 && segmentIndex < swordMiddle.Length && swordMiddle[segmentIndex] != null)
-                {
-                    RectTransform segmentRect = swordMiddle[segmentIndex].GetComponent<RectTransform>();
-                    if (segmentRect != null)
-                    {
-                        headRect.position = segmentRect.position;
-                    }
-                }
-                else if (health > 0 && swordTip != null)
-                {
-                    RectTransform tipRect = swordTip.GetComponent<RectTransform>();
-                    if (tipRect != null)
-                    {
-                        headRect.position = tipRect.position + new Vector3(headOffsetX, headOffsetY, 0);
-                    }
-                }
-            }
-        }
-    }
-
-    private void UpdateKnightPosition()
-    {
-        if (knightSprite != null)
-        {
-            RectTransform knightRect = knightSprite.GetComponent<RectTransform>();
-            if (knightRect != null)
-            {
-                float healthLost = maxHealth - health;
-                float moveAmount = healthLost * knightMoveDistance;
-
-                knightRect.anchoredPosition = new Vector2(-moveAmount, knightRect.anchoredPosition.y);
-            }
-        }
-    }
-
-    private enum KnightState
-    {
-        Health5,
-        Health4,
-        Health3,
-        Health2,
-        Health1
-    }
-
 }

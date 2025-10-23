@@ -24,7 +24,7 @@ public class ParabolicBulletScript : MonoBehaviour
             var player = other.GetComponent<playerLife>();
             if (player != null)
             {
-                player.RecibeDano(transform.position, damage);
+                player.TakeDamage(transform.position, damage);
             }
             Destroy(gameObject);
         }
