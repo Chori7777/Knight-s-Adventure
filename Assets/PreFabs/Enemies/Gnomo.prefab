@@ -95,7 +95,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 1.98, y: -2.11, z: 0}
-  m_LocalScale: {x: -1, y: 1, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4209008974644215092}
@@ -215,8 +215,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2c0bfbdb8908f944b6f6b6425aa01ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  health: 3
-  maxHealth: 3
+  health: 1
+  maxHealth: 1
   Boss: 0
   isDead: 0
 --- !u!61 &7147592037318283356
@@ -306,11 +306,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 0}
   projectilePrefab1: {fileID: 2960812306753669557, guid: 80fc63640594eca40bb36d95c20e08dc, type: 3}
-  projectilePrefab2: {fileID: 6682483255585087732, guid: 1c9fd3b9e1d4e944e956803dd3b3b851, type: 3}
+  projectilePrefab2: {fileID: 2960812306753669557, guid: 80fc63640594eca40bb36d95c20e08dc, type: 3}
   firePoint1: {fileID: 1013273133848912547}
   firePoint2: {fileID: 297062937211440368}
   projectileSpeed: 5.26
-  attackCooldown: 2
+  attackCooldown: 3
   attackRange: 5.25
   detectionRange: 3.96
 --- !u!1 &7170772247812244133

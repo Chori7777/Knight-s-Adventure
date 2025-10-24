@@ -7,7 +7,7 @@ public class enemyBasicMovement : MonoBehaviour
     public float speed = 2f;
     public Transform groundCheck;
     public float checkDistance = 0.5f;
-    public LayerMask sueloLayer; 
+    public LayerMask sueloLayer;
 
     [Header("Player")]
     public Transform player;
@@ -24,10 +24,18 @@ public class enemyBasicMovement : MonoBehaviour
     private bool recibiendoDanio = false;
     public bool puedeMoverse = true;
 
+    // Referencias a sistemas de vida alternativos
+    private BossLife bossLife;
+    private enemyLife enemyLifeScript;
+
     void Start()
     {
         anim = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
+
+        // Detectar qué sistema de vida usa este enemigo
+        bossLife = GetComponent<BossLife>();
+        enemyLifeScript = GetComponent<enemyLife>();
 
         if (player == null)
         {
@@ -40,7 +48,7 @@ public class enemyBasicMovement : MonoBehaviour
     {
         if (!muerto && !recibiendoDanio && puedeMoverse)
         {
-            //seguir al jugador si esta cerca
+            // Seguir al jugador si está cerca
             if (player != null)
             {
                 float distToPlayer = Vector2.Distance(transform.position, player.position);
@@ -120,25 +128,41 @@ public class enemyBasicMovement : MonoBehaviour
 
     public void RecibeDanio(Vector2 direccion, int cantDanio)
     {
-        if (!recibiendoDanio && !muerto)
+        if (recibiendoDanio || muerto) return;
+
+        // Si tiene BossLife, delegar a ese sistema
+        if (bossLife != null)
         {
-            vida -= cantDanio;
-            recibiendoDanio = true;
+            bossLife.RecibeDanio(direccion, cantDanio);
+            return;
+        }
 
-            if (vida <= 0)
-            {
-                Morir();
-            }
-            else
-            {
-                // Aplicar knockback
-                Vector2 knockDir = ((Vector2)transform.position - direccion).normalized;
-                knockDir.y = Mathf.Clamp(knockDir.y + 0.5f, 0.5f, 1f);
-                rb.linearVelocity = Vector2.zero;
-                rb.AddForce(knockDir * fuerzaKnockback, ForceMode2D.Impulse);
+        // Si tiene enemyLife, delegar a ese sistema
+        if (enemyLifeScript != null)
+        {
+            enemyLifeScript.TakeDamage(cantDanio);
+            return;
+        }
 
-                StartCoroutine(RecuperarDeKnockback());
-            }
+        // Sistema de vida local (fallback)
+        vida -= cantDanio;
+        recibiendoDanio = true;
+
+        Debug.Log($"Enemigo recibió {cantDanio} de daño. Vida: {vida}");
+
+        if (vida <= 0)
+        {
+            Morir();
+        }
+        else
+        {
+            // Aplicar knockback
+            Vector2 knockDir = ((Vector2)transform.position - direccion).normalized;
+            knockDir.y = Mathf.Clamp(knockDir.y + 0.5f, 0.5f, 1f);
+            rb.linearVelocity = Vector2.zero;
+            rb.AddForce(knockDir * fuerzaKnockback, ForceMode2D.Impulse);
+
+            StartCoroutine(RecuperarDeKnockback());
         }
     }
 
@@ -151,7 +175,7 @@ public class enemyBasicMovement : MonoBehaviour
         Collider2D col = GetComponent<Collider2D>();
         if (col != null) col.enabled = false;
 
-        Debug.Log("Muelto");
+        Debug.Log("Enemigo muerto");
 
         Destroy(gameObject, 1.5f);
     }

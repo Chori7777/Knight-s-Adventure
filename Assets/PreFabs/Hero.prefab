@@ -48,7 +48,6 @@ GameObject:
   - component: {fileID: 1388570725669603576}
   - component: {fileID: 7234856735944502852}
   - component: {fileID: 3935386594159636164}
-  - component: {fileID: 7162524510826510117}
   m_Layer: 7
   m_Name: Hero
   m_TagString: Player
@@ -172,25 +171,25 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1024
   moveSpeed: 5
-  blockMoveSpeed: 2
+  blockMoveSpeed: 3
   sprintMultiplier: 1.5
   isSprintMode: 1
-  jumpForce: 12
-  doubleJumpForce: 10
+  jumpForce: 8
+  doubleJumpForce: 8
   fallMultiplier: 2.5
-  lowJumpMultiplier: 1.2
+  lowJumpMultiplier: 3
   coyoteTime: 0.15
   jumpBufferTime: 0.1
   dashSpeed: 11
   dashDuration: 0.15
   dashCooldown: 0.5
   wallSlideSpeed: 2
-  wallSlideFastSpeed: 6
+  wallSlideFastSpeed: 3
   wallJumpForce: {x: 10, y: 12}
   wallGravity: 0.5
   wallJumpLockTime: 0.2
   attackStepSpeed: 5
-  attackStepDelay: 0.15
+  attackStepDelay: 0.3
   attackStepDuration: 0.1
   attackGroundDuration: 0.4
   attackAirDuration: 0.4
@@ -204,11 +203,11 @@ MonoBehaviour:
   canDoubleJump: 1
   canAttack: 1
   canDash: 1
-  canWallCling: 1
+  canWallCling: 0
   canBlock: 1
   canThrowProjectile: 1
-  groundCheckRay: 3.2
-  wallCheckDistance: 0.47
+  groundCheckRay: 0.57
+  wallCheckDistance: 0.65
   inputDeadzone: 0.1
   isTakingDamage: 0
 --- !u!114 &3639976318873108436
@@ -225,23 +224,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   potionText: {fileID: 0}
   swordHandle: {fileID: 0}
-  swordMiddleParts: []
+  swordMiddleParts:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   swordTip: {fileID: 0}
-  handleFullSprite: {fileID: 0}
-  middleFullSprite: {fileID: 0}
-  tipFullSprite: {fileID: 0}
-  handleEmptySprite: {fileID: 0}
-  middleEmptySprite: {fileID: 0}
-  tipEmptySprite: {fileID: 0}
+  handleFullSprite: {fileID: 8637241276000059570, guid: 2bb9c450dfa2c684d864703b201acc3c, type: 3}
+  middleFullSprite: {fileID: -513770020, guid: 2bb9c450dfa2c684d864703b201acc3c, type: 3}
+  tipFullSprite: {fileID: 154358765, guid: 2bb9c450dfa2c684d864703b201acc3c, type: 3}
+  handleEmptySprite: {fileID: 6272732809257836685, guid: e26acde59792e7945a690c465c85c075, type: 3}
+  middleEmptySprite: {fileID: 94815371, guid: e26acde59792e7945a690c465c85c075, type: 3}
+  tipEmptySprite: {fileID: -2024096495, guid: e26acde59792e7945a690c465c85c075, type: 3}
   knightImage: {fileID: 0}
   knightHeadImage: {fileID: 0}
-  knight5HealthSprite: {fileID: 0}
-  knight4HealthSprite: {fileID: 0}
-  knight3HealthSprite: {fileID: 0}
-  knight2HealthSprite: {fileID: 0}
-  knight1HealthSprite: {fileID: 0}
+  knight5HealthSprite: {fileID: 7145198348311737387, guid: 54bfecb9a47a16b428cd0c0c9525dae2, type: 3}
+  knight4HealthSprite: {fileID: -3708508325519384304, guid: 54bfecb9a47a16b428cd0c0c9525dae2, type: 3}
+  knight3HealthSprite: {fileID: 3106341853739790030, guid: 54bfecb9a47a16b428cd0c0c9525dae2, type: 3}
+  knight2HealthSprite: {fileID: 94058731202090889, guid: 54bfecb9a47a16b428cd0c0c9525dae2, type: 3}
+  knight1HealthSprite: {fileID: 1222221480408444849, guid: 54bfecb9a47a16b428cd0c0c9525dae2, type: 3}
   knightMoveDistancePerHealth: 50
-  headOffsetX: 60
+  headOffsetX: 0
   headOffsetY: 0
 --- !u!50 &5419059314384228200
 Rigidbody2D:
@@ -350,38 +352,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d8c19ea4e883894784319ea84678f1d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &7162524510826510117
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5671156133088508336}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b9b2667ee0a09fd40acaf199e335a9a5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  potionText: {fileID: 0}
-  swordHandle: {fileID: 0}
-  swordMiddleParts: []
-  swordTip: {fileID: 0}
-  handleFullSprite: {fileID: 0}
-  middleFullSprite: {fileID: 0}
-  tipFullSprite: {fileID: 0}
-  handleEmptySprite: {fileID: 0}
-  middleEmptySprite: {fileID: 0}
-  tipEmptySprite: {fileID: 0}
-  knightImage: {fileID: 0}
-  knightHeadImage: {fileID: 0}
-  knight5HealthSprite: {fileID: 0}
-  knight4HealthSprite: {fileID: 0}
-  knight3HealthSprite: {fileID: 0}
-  knight2HealthSprite: {fileID: 0}
-  knight1HealthSprite: {fileID: 0}
-  knightMoveDistancePerHealth: 50
-  headOffsetX: 60
-  headOffsetY: 0
 --- !u!1 &6035785815265924650
 GameObject:
   m_ObjectHideFlags: 0

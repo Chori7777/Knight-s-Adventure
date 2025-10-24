@@ -74,10 +74,10 @@ GameObject:
   - component: {fileID: 7305330696181326191}
   - component: {fileID: 776334529823917111}
   - component: {fileID: 3311252075809873072}
-  - component: {fileID: 2761023374019919648}
   - component: {fileID: 7147592037318283356}
   - component: {fileID: 3475437153517648501}
   - component: {fileID: 508105599305044308}
+  - component: {fileID: -2209442431927103174}
   m_Layer: 0
   m_Name: GnomoBoss
   m_TagString: enemy
@@ -95,8 +95,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 1.98, y: -2.11, z: 0}
-  m_LocalScale: {x: -2, y: 2, z: 2}
-  m_ConstrainProportionsScale: 1
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4209008974644215092}
   - {fileID: 1013273133848912547}
@@ -200,25 +200,9 @@ MonoBehaviour:
     m_Bits: 2048
   player: {fileID: 0}
   detectionRadius: 2.99
-  vida: 3
-  fuerzaKnockback: 6
+  vida: 5
+  fuerzaKnockback: 3
   puedeMoverse: 1
---- !u!114 &2761023374019919648
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6229770886919154552}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c2c0bfbdb8908f944b6f6b6425aa01ee, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  health: 5
-  maxHealth: 5
-  Boss: 1
-  isDead: 0
 --- !u!61 &7147592037318283356
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -313,6 +297,26 @@ MonoBehaviour:
   attackCooldown: 2
   attackRange: 4.64
   detectionRange: 3.9
+--- !u!114 &-2209442431927103174
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6229770886919154552}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1549b28ec00af5544899c43e7974b0af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bossID: Boss1
+  health: 5
+  maxHealth: 5
+  savePointPrefab: {fileID: 8881892248107932051, guid: 768c34e50902085458c4c28329b38437, type: 3}
+  savePointSpawnPosition: {x: 0, y: 0, z: 0}
+  spawnSavePointOnDeath: 1
+  knockbackForce: 6
+  knockbackRecoveryTime: 0.4
 --- !u!1 &7170772247812244133
 GameObject:
   m_ObjectHideFlags: 0

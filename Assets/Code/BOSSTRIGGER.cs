@@ -1,21 +1,39 @@
-using UnityEngine;
+﻿using UnityEngine;
+using System.Collections;
 
 public class BossTrigger : MonoBehaviour
 {
-    [SerializeField] private GameObject bossPrefab; // Jefe
-    [SerializeField] private Vector3 bossSpawnPosition = Vector3.zero; // Pos Jefe
-    [SerializeField] private BossDoor[] doorsToClose; // Puertas
+    [Header("Configuración del Jefe")]
+    [SerializeField] private string bossID = "Boss1";        // ID único
+    [SerializeField] private GameObject bossPrefab;          // Prefab del jefe
+    [SerializeField] private Vector3 bossSpawnPosition;      // Posición de spawn
+    [SerializeField] private BossDoor[] doorsToClose;        // Puertas del boss
+
+    [Header("Opciones")]
     [SerializeField] private float cooldownTiempo = 1f;
     [SerializeField] private GameObject player;
 
     private bool enCooldown = false;
     private bool enPelea = false;
 
-    private void Start()
-    {
+    // 🔗 Referencia directa al jefe instanciado
+    private BossLife spawnedBoss;
 
+    void Start()
+    {
+        // Revisar si el jefe ya fue derrotado
+        if (ControladorDatosJuego.Instance != null &&
+            ControladorDatosJuego.Instance.datosjuego.jefesDerrotados.Contains(bossID))
+        {
+            Debug.Log($"⚰️ {bossID} ya fue derrotado. Desactivando trigger...");
+            gameObject.SetActive(false);
+        }
+
+        if (bossSpawnPosition == Vector3.zero)
+            bossSpawnPosition = transform.position + new Vector3(2f, 0, 0);
     }
-    void OnTriggerEnter2D(Collider2D collision)
+
+    private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Player") && !enCooldown && !enPelea)
         {
@@ -26,37 +44,48 @@ public class BossTrigger : MonoBehaviour
 
     private void IniciarBatalla()
     {
-        Debug.Log("Jefe spawn");
+        Debug.Log($"🔥 Iniciando batalla con {bossID}");
         enPelea = true;
 
-        // Genera
+        // Spawnear jefe y guardar referencia directa
         if (bossPrefab != null)
         {
-            Instantiate(bossPrefab, bossSpawnPosition, Quaternion.identity);
+            GameObject bossObj = Instantiate(bossPrefab, bossSpawnPosition, Quaternion.identity);
+            spawnedBoss = bossObj.GetComponent<BossLife>();
+            if (spawnedBoss != null)
+                spawnedBoss.SetBossTrigger(this); // Asignamos referencia al trigger
         }
 
-        // Cierra
         CerrarPuertas();
     }
 
     private void CerrarPuertas()
     {
-
         foreach (BossDoor puerta in doorsToClose)
         {
             if (puerta != null)
-            {
                 puerta.CerrarPuerta();
-                Debug.Log("Puerta cerrada: " + puerta.gameObject.name);
-            }
         }
     }
 
+    // Este método será llamado por el jefe al morir
     public void JefeDerotado()
     {
-        Debug.Log("Muelto");
+        Debug.Log($"✅ {bossID} derrotado, abriendo puertas...");
         enPelea = false;
         AbrirPuertas();
+
+        // Guardar que el jefe fue derrotado
+        if (ControladorDatosJuego.Instance != null &&
+            !ControladorDatosJuego.Instance.datosjuego.jefesDerrotados.Contains(bossID))
+        {
+            ControladorDatosJuego.Instance.datosjuego.jefesDerrotados.Add(bossID);
+            ControladorDatosJuego.Instance.GuardarDatos();
+            Debug.Log(" Progreso guardado: jefe derrotado");
+        }
+
+        // Desactivar trigger
+        gameObject.SetActive(false);
     }
 
     private void AbrirPuertas()
@@ -64,32 +93,14 @@ public class BossTrigger : MonoBehaviour
         foreach (BossDoor puerta in doorsToClose)
         {
             if (puerta != null)
-            {
                 puerta.AbrirPuerta();
-                Debug.Log("Puerta abierta: " + puerta.gameObject.name);
-            }
         }
     }
 
-    private System.Collections.IEnumerator ActivarCooldown()
+    private IEnumerator ActivarCooldown()
     {
         enCooldown = true;
         yield return new WaitForSeconds(cooldownTiempo);
         enCooldown = false;
-    }
-
-    void OnDrawGizmosSelected()
-    {
-        // Dibuja la posici�n donde aparecer� el jefe
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(bossSpawnPosition, 0.5f);
-
-        // Dibuja el trigger
-        BoxCollider2D boxCollider = GetComponent<BoxCollider2D>();
-        if (boxCollider != null)
-        {
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireCube(transform.position, boxCollider.size);
-        }
     }
 }

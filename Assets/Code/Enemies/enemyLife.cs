@@ -1,74 +1,58 @@
 ﻿using UnityEngine;
 
-
 public class enemyLife : MonoBehaviour
 {
+    [Header("Vida del enemigo")]
     public int health = 3;
     public int maxHealth = 3;
-    public bool Boss = false;
     public bool isDead = false;
-    Animator anim;
 
-    void Awake()
+    private Animator anim;
+
+    private void Awake()
     {
         health = maxHealth;
     }
 
-    void Start()
+    private void Start()
     {
         anim = GetComponent<Animator>();
     }
 
     public void TakeDamage(int damage)
     {
+        if (isDead) return;
+
         health -= damage;
         if (health < 0) health = 0;
+
         anim.SetBool("damage", true);
-        Debug.Log("enemy health: " + health);
+        Debug.Log($"💢 Daño recibido. Vida restante: {health}");
 
         if (health <= 0)
         {
-            anim.SetBool("damage", false);
-            anim.SetBool("Death", true);
-
-            // Si es un jefe, abrimos las puertas
-            if (Boss)
-            {
-                AbrirPuertasDelJefe();
-            }
-
-            // Destruir el objeto después de 1 segundo para que se vea la animación de muerte
-            Destroy(gameObject, 1f);
-            Debug.Log("enemigo muerto");
+            Die();
         }
     }
 
-    private void AbrirPuertasDelJefe()
+    private void Die()
     {
-        Debug.Log("🔍 Buscando BossTrigger...");
+        isDead = true;
+        anim.SetBool("damage", false);
+        anim.SetBool("Death", true);
 
-        // Buscamos el BossTrigger en la escena
-        BossTrigger bossTrigger = Object.FindFirstObjectByType<BossTrigger>();
-
-        if (bossTrigger != null)
-        {
-            Debug.Log("✅ BossTrigger encontrado");
-            bossTrigger.JefeDerotado();
-            Debug.Log("¡Jefe derrotado! Puertas abiertas");
-        }
-        else
-        {
-            Debug.LogError("❌ No se encontró BossTrigger en la escena");
-        }
+        Debug.Log("☠️ Enemigo muriendo...");
+        Destroy(gameObject, 1f);
     }
 
-    public void Die()
-    {
-        anim.SetBool("Death", false);
-    }
-
+    // Llamada desde animación
     public void StopDmg()
     {
         anim.SetBool("damage", false);
+    }
+
+    public void OnDeathAnimationEnd()
+    {
+        anim.SetBool("Death", false);
     }
 }

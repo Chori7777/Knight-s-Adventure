@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 // ============================================
 // CLASE DE DATOS SERIALIZABLES
@@ -45,6 +46,8 @@ public class DatosJuego
     // ESCENA
     // ============================================
     public string escenaActual = "";
+
+    public List<string> jefesDerrotados = new List<string>();
 
     // ============================================
     // CONSTRUCTOR (opcional - valores por defecto)
