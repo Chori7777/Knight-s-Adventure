@@ -1050,7 +1050,7 @@ GameObject:
   - component: {fileID: 7651740939222365896}
   - component: {fileID: 296573420787435924}
   m_Layer: 0
-  m_Name: GARDEn
+  m_Name: Garden
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -49,7 +49,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -63,7 +63,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 16
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -172,10 +172,10 @@ TextureImporter:
       name: zombie_death_anim_2
       rect:
         serializedVersion: 2
-        x: 31
+        x: 32
         y: 0
-        width: 28
-        height: 15
+        width: 16
+        height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -194,10 +194,10 @@ TextureImporter:
       name: zombie_death_anim_3
       rect:
         serializedVersion: 2
-        x: 54
-        y: 9
-        width: 8
-        height: 7
+        x: 48
+        y: 0
+        width: 16
+        height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -216,9 +216,9 @@ TextureImporter:
       name: zombie_death_anim_4
       rect:
         serializedVersion: 2
-        x: 58
+        x: 64
         y: 0
-        width: 38
+        width: 16
         height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
@@ -234,11 +234,33 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: zombie_death_anim_5
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 0
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 250afaee581206e49909102d60b3bd9c
+      internalID: -923869260
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 2e5a6626c48553e4bbb98c161bef56dd
     internalID: 0
     vertices: []
     indices: 
@@ -253,6 +275,7 @@ TextureImporter:
       zombie_death_anim_2: -7212868696261478960
       zombie_death_anim_3: 1205035241671093667
       zombie_death_anim_4: 8602006102820258708
+      zombie_death_anim_5: -923869260
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
