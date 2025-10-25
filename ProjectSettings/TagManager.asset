@@ -54,6 +54,9 @@ TagManager:
   - name: Fondo
     uniqueID: 1462876291
     locked: 0
+  - name: Decoration
+    uniqueID: 2881989681
+    locked: 0
   - name: Blockes
     uniqueID: 3746132569
     locked: 0
