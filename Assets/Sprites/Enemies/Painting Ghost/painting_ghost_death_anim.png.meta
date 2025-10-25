@@ -58,7 +58,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -72,7 +72,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 16
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -138,9 +138,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 12
-        width: 31
-        height: 12
+        y: 0
+        width: 16
+        height: 24
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -159,10 +159,10 @@ TextureImporter:
       name: painting_ghost_death_anim_1
       rect:
         serializedVersion: 2
-        x: 0
+        x: 16
         y: 0
-        width: 17
-        height: 11
+        width: 16
+        height: 24
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -181,10 +181,10 @@ TextureImporter:
       name: painting_ghost_death_anim_2
       rect:
         serializedVersion: 2
-        x: 17
+        x: 32
         y: 0
         width: 16
-        height: 10
+        height: 24
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -203,10 +203,10 @@ TextureImporter:
       name: painting_ghost_death_anim_3
       rect:
         serializedVersion: 2
-        x: 34
-        y: 2
-        width: 13
-        height: 20
+        x: 48
+        y: 0
+        width: 16
+        height: 24
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -225,10 +225,10 @@ TextureImporter:
       name: painting_ghost_death_anim_4
       rect:
         serializedVersion: 2
-        x: 51
-        y: 5
-        width: 11
-        height: 14
+        x: 64
+        y: 0
+        width: 16
+        height: 24
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -247,10 +247,10 @@ TextureImporter:
       name: painting_ghost_death_anim_5
       rect:
         serializedVersion: 2
-        x: 68
-        y: 8
-        width: 10
-        height: 11
+        x: 80
+        y: 0
+        width: 16
+        height: 24
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -269,10 +269,10 @@ TextureImporter:
       name: painting_ghost_death_anim_6
       rect:
         serializedVersion: 2
-        x: 83
-        y: 1
-        width: 45
-        height: 23
+        x: 96
+        y: 0
+        width: 16
+        height: 24
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -291,10 +291,10 @@ TextureImporter:
       name: painting_ghost_death_anim_7
       rect:
         serializedVersion: 2
-        x: 83
-        y: 7
-        width: 7
-        height: 7
+        x: 112
+        y: 0
+        width: 16
+        height: 24
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -313,7 +313,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 9e517c3ba55c4424ea28536e9a747490
     internalID: 0
     vertices: []
     indices: 

@@ -167,9 +167,6 @@ public class BossLife : MonoBehaviour
         var attackScript = GetComponent<EnemyBasicAttack>();
         if (attackScript != null) attackScript.enabled = false;
 
-        var movementScript = GetComponent<enemyBasicMovement>();
-        if (movementScript != null) movementScript.puedeMoverse = false;
-
         StartCoroutine(DeathSequence());
     }
 

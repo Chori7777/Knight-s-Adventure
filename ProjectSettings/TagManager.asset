@@ -13,6 +13,7 @@ TagManager:
   - Coin
   - Consumable
   - HealthPotion
+  - Comsumable
   layers:
   - Default
   - TransparentFX
@@ -26,7 +27,7 @@ TagManager:
   - Suelo
   - Pared
   - Sueloenemigo
-  - 
+  - Obstacles
   - 
   - 
   - 
@@ -64,6 +65,9 @@ TagManager:
     locked: 0
   - name: Checkpoint
     uniqueID: 3550793155
+    locked: 0
+  - name: Proyectiles
+    uniqueID: 2260495813
     locked: 0
   - name: Player
     uniqueID: 1262583705

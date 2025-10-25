@@ -1,58 +1,176 @@
 ﻿using UnityEngine;
+using System.Collections;
 
-public class enemyLife : MonoBehaviour
+/// <summary>
+/// Sistema de vida universal para enemigos
+/// </summary>
+public class EnemyLife : MonoBehaviour
 {
-    [Header("Vida del enemigo")]
-    public int health = 3;
-    public int maxHealth = 3;
-    public bool isDead = false;
+    [Header("Vida")]
+    [SerializeField] private int maxHealth = 3;
+    private int currentHealth;
 
-    private Animator anim;
+    [Header("Knockback")]
+    [SerializeField] private float knockbackForce = 6f;
+    [SerializeField] private float knockbackRecoveryTime = 0.4f;
 
-    private void Awake()
+    [Header("Muerte")]
+    [SerializeField] private float deathDelay = 1.5f;
+
+    private EnemyCore core;
+
+    public void Initialize(EnemyCore enemyCore)
     {
-        health = maxHealth;
+        core = enemyCore;
+        currentHealth = maxHealth;
     }
 
-    private void Start()
-    {
-        anim = GetComponent<Animator>();
-    }
-
+    // ============================================
+    // RECIBIR DAÑO
+    // ============================================
     public void TakeDamage(int damage)
     {
-        if (isDead) return;
+        if (core.IsDead || core.IsTakingDamage) return;
 
-        health -= damage;
-        if (health < 0) health = 0;
+        currentHealth -= damage;
+        if (currentHealth < 0) currentHealth = 0;
 
-        anim.SetBool("damage", true);
-        Debug.Log($"💢 Daño recibido. Vida restante: {health}");
+        Debug.Log($"💢 {gameObject.name} recibió {damage} daño. Vida: {currentHealth}/{maxHealth}");
 
-        if (health <= 0)
+        // Animación de daño
+        if (core.animController != null)
+        {
+            core.animController.SetDamage(true);
+        }
+
+        if (currentHealth <= 0)
         {
             Die();
         }
+        else
+        {
+            core.SetTakingDamage(true);
+            StartCoroutine(DamageRecovery());
+        }
     }
 
+    public void TakeDamageWithKnockback(Vector2 attackPosition, int damage)
+    {
+        if (core.IsDead || core.IsTakingDamage) return;
+
+        currentHealth -= damage;
+        if (currentHealth < 0) currentHealth = 0;
+
+        Debug.Log($"💢 {gameObject.name} recibió {damage} daño. Vida: {currentHealth}/{maxHealth}");
+
+        core.SetTakingDamage(true);
+
+        // Animación de daño
+        if (core.animController != null)
+        {
+            core.animController.SetDamage(true);
+        }
+
+        if (currentHealth <= 0)
+        {
+            Die();
+        }
+        else
+        {
+            ApplyKnockback(attackPosition);
+            StartCoroutine(DamageRecovery());
+        }
+    }
+
+    private void ApplyKnockback(Vector2 attackPosition)
+    {
+        if (core.rb == null) return;
+
+        Vector2 knockbackDir = ((Vector2)transform.position - attackPosition).normalized;
+        knockbackDir.y = Mathf.Clamp(knockbackDir.y + 0.5f, 0.5f, 1f);
+
+        core.rb.linearVelocity = Vector2.zero;
+        core.rb.AddForce(knockbackDir * knockbackForce, ForceMode2D.Impulse);
+    }
+
+    private IEnumerator DamageRecovery()
+    {
+        yield return new WaitForSeconds(knockbackRecoveryTime);
+
+        core.SetTakingDamage(false);
+
+        if (core.animController != null)
+        {
+            core.animController.SetDamage(false);
+        }
+
+        // Detener movimiento horizontal después del knockback
+        if (core.rb != null)
+        {
+            core.rb.linearVelocity = new Vector2(0, core.rb.linearVelocity.y);
+        }
+    }
+
+    // ============================================
+    // MUERTE
+    // ============================================
     private void Die()
     {
-        isDead = true;
-        anim.SetBool("damage", false);
-        anim.SetBool("Death", true);
+        if (core.IsDead) return;
 
-        Debug.Log("☠️ Enemigo muriendo...");
-        Destroy(gameObject, 1f);
+        core.SetDead(true);
+        core.SetTakingDamage(false);
+
+        Debug.Log($"☠️ {gameObject.name} ha muerto");
+
+        // Animación de muerte
+        if (core.animController != null)
+        {
+            core.animController.SetDamage(false);
+            core.animController.SetDeath(true);
+        }
+
+        // Detener movimiento
+        if (core.rb != null)
+        {
+            core.rb.linearVelocity = Vector2.zero;
+        }
+
+        // Desactivar colisiones
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null) col.enabled = false;
+
+        // Desactivar módulos
+        DisableModules();
+
+        // Destruir después del delay
+        Destroy(gameObject, deathDelay);
     }
 
-    // Llamada desde animación
-    public void StopDmg()
+    private void DisableModules()
     {
-        anim.SetBool("damage", false);
+        if (core.movement != null) core.movement.enabled = false;
+        if (core.meleeAttack != null) core.meleeAttack.enabled = false;
+        if (core.rangedAttack != null) core.rangedAttack.enabled = false;
+        if (core.flying != null) core.flying.enabled = false;
     }
 
-    public void OnDeathAnimationEnd()
+    // ============================================
+    // COLISIONES (detección de espada del jugador)
+    // ============================================
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        anim.SetBool("Death", false);
+        if (collision.CompareTag("Espada") && !core.IsDead)
+        {
+            Vector2 attackPosition = new Vector2(collision.transform.position.x, transform.position.y);
+            TakeDamageWithKnockback(attackPosition, 1);
+        }
     }
+
+    // ============================================
+    // PROPIEDADES PÚBLICAS
+    // ============================================
+    public int CurrentHealth => currentHealth;
+    public int MaxHealth => maxHealth;
+    public float HealthPercentage => (float)currentHealth / maxHealth;
 }

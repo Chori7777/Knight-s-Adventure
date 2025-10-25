@@ -9,7 +9,7 @@ public class swordDamageScript : MonoBehaviour
             Debug.Log("Hit enemy!");
 
             // Buscar el script EnemyLife en el enemigo que colisiona
-            var life = other.GetComponent<enemyLife>();
+            var life = other.GetComponent<EnemyLife>();
             if (life != null)
             {
                 life.TakeDamage(1); // Aplica 1 de daño

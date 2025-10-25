@@ -78,6 +78,7 @@ GameObject:
   - component: {fileID: 7147592037318283356}
   - component: {fileID: 3475437153517648501}
   - component: {fileID: 508105599305044308}
+  - component: {fileID: 2831948375583403706}
   m_Layer: 0
   m_Name: Gnomo
   m_TagString: enemy
@@ -145,7 +146,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 1262583705
-  m_SortingLayer: 6
+  m_SortingLayer: 7
   m_SortingOrder: 0
   m_Sprite: {fileID: -1596988090423549555, guid: e73a94d5752f84241b31630d9218ddd2, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -192,17 +193,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c67973d6cc18f8c4d8be9a51e668a17f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 2
+  patrolSpeed: 2
   groundCheck: {fileID: 4209008974644215092}
-  checkDistance: 0.31
-  sueloLayer:
+  groundCheckDistance: 0.5
+  groundLayer:
     serializedVersion: 2
-    m_Bits: 2048
-  player: {fileID: 1776710345640356568, guid: dc0dfb65d9dc32d4dbdcf70da0a95762, type: 3}
-  detectionRadius: 2.99
-  vida: 3
-  fuerzaKnockback: 6
-  puedeMoverse: 1
+    m_Bits: 0
+  chaseSpeed: 3
+  detectionRange: 5
+  canChasePlayer: 1
 --- !u!114 &2761023374019919648
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -215,10 +214,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2c0bfbdb8908f944b6f6b6425aa01ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  health: 1
   maxHealth: 1
-  Boss: 0
-  isDead: 0
+  knockbackForce: 6
+  knockbackRecoveryTime: 0.4
+  deathDelay: 1.5
 --- !u!61 &7147592037318283356
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -313,6 +312,28 @@ MonoBehaviour:
   attackCooldown: 3
   attackRange: 5.25
   detectionRange: 3.96
+--- !u!114 &2831948375583403706
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6229770886919154552}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 317cbee25bff8d84b930eb14c6c1a19a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rb: {fileID: 0}
+  anim: {fileID: 0}
+  spriteRenderer: {fileID: 0}
+  animController: {fileID: 0}
+  movement: {fileID: 0}
+  life: {fileID: 0}
+  meleeAttack: {fileID: 0}
+  rangedAttack: {fileID: 0}
+  flying: {fileID: 0}
+  player: {fileID: 0}
 --- !u!1 &7170772247812244133
 GameObject:
   m_ObjectHideFlags: 0

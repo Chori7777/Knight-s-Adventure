@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 6522067530093130819}
   - component: {fileID: 6616978852467806482}
   - component: {fileID: 1428201519339842549}
+  - component: {fileID: 1682110899891861815}
   m_Layer: 0
   m_Name: worm.
   m_TagString: enemy
@@ -106,17 +107,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c67973d6cc18f8c4d8be9a51e668a17f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 2
+  patrolSpeed: 2
   groundCheck: {fileID: 3636391205635541740}
-  checkDistance: 1.5
-  sueloLayer:
+  groundCheckDistance: 0.5
+  groundLayer:
     serializedVersion: 2
-    m_Bits: 2048
-  player: {fileID: 0}
-  detectionRadius: 2
-  vida: 1
-  fuerzaKnockback: 3
-  puedeMoverse: 1
+    m_Bits: 0
+  chaseSpeed: 3
+  detectionRange: 5
+  canChasePlayer: 1
 --- !u!114 &598371359425070291
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -142,10 +141,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2c0bfbdb8908f944b6f6b6425aa01ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  health: 1
   maxHealth: 1
-  Boss: 0
-  isDead: 0
+  knockbackForce: 6
+  knockbackRecoveryTime: 0.4
+  deathDelay: 1.5
 --- !u!61 &6522067530093130819
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -241,6 +240,28 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
+--- !u!114 &1682110899891861815
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2645185197242809453}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 317cbee25bff8d84b930eb14c6c1a19a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rb: {fileID: 0}
+  anim: {fileID: 0}
+  spriteRenderer: {fileID: 0}
+  animController: {fileID: 0}
+  movement: {fileID: 0}
+  life: {fileID: 0}
+  meleeAttack: {fileID: 0}
+  rangedAttack: {fileID: 0}
+  flying: {fileID: 0}
+  player: {fileID: 0}
 --- !u!1 &5291124279953671108
 GameObject:
   m_ObjectHideFlags: 0

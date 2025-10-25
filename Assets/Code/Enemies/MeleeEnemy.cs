@@ -1,74 +1,143 @@
+﻿using UnityEngine;
 using System.Collections;
-using UnityEngine;
 
-public class MeleeEnemy : MonoBehaviour
+/// <summary>
+/// Sistema de ataque cuerpo a cuerpo
+/// </summary>
+public class EnemyMeleeAttack : MonoBehaviour
 {
-    [Header("Detecci�n")]
-    public float detectionRange = 2f;
-    public LayerMask playerLayer;
-    public Transform rayOrigin; 
+    [Header("Detección")]
+    [SerializeField] private float attackRange = 2f;
+    [SerializeField] private Transform attackPoint;
+    [SerializeField] private LayerMask playerLayer;
 
     [Header("Ataque")]
-    public float attackCooldown = 1f;
+    [SerializeField] private int attackDamage = 1;
+    [SerializeField] private float attackCooldown = 1.5f;
+    [SerializeField] private float attackDuration = 0.5f;
 
+    [Header("Hitbox (Opcional - para Animation Event)")]
+    [SerializeField] private float hitboxRadius = 1f;
 
-    private Animator anim;
-    private bool isAttacking = false;
-    private bool canAttack = true;
-    private Vector2 facingDirection
+    private EnemyCore core;
+    private float lastAttackTime = -Mathf.Infinity;
+
+    public void Initialize(EnemyCore enemyCore)
     {
-        get
+        core = enemyCore;
+        CreateAttackPointIfNeeded();
+    }
+
+    private void CreateAttackPointIfNeeded()
+    {
+        if (attackPoint == null)
         {
-            // Si el enemigo mira a la derecha (scale.x positivo), raycast a la derecha. Si no, a la izquierda
-            return transform.localScale.x > 0 ? Vector2.right : Vector2.left;
+            GameObject pointObj = new GameObject("AttackPoint");
+            pointObj.transform.SetParent(transform);
+            pointObj.transform.localPosition = new Vector3(0.5f, 0, 0);
+            attackPoint = pointObj.transform;
         }
     }
 
-
-    void Start()
+    private void Update()
     {
-        anim = GetComponent<Animator>();
-    }
+        if (!core.CanMove || core.IsAttacking) return;
 
-    void Update()
-    {
-        DetectPlayer();
-    }
-
-    void DetectPlayer()
-    {
-        // Tira un rayo al frente
-        RaycastHit2D hit = Physics2D.Raycast(rayOrigin.position, facingDirection, detectionRange, playerLayer);
-
-
-        if (hit.collider != null && !isAttacking && canAttack)
+        // Detectar jugador en rango de ataque
+        if (IsPlayerInRange() && CanAttack())
         {
-            // Si el jugador est� en rango, iniciar ataque
-            StartCoroutine(AttackRoutine(hit.collider.gameObject));
+            StartCoroutine(AttackRoutine());
         }
     }
 
-    IEnumerator AttackRoutine(GameObject player)
+    // ============================================
+    // DETECCIÓN
+    // ============================================
+    private bool IsPlayerInRange()
     {
-        isAttacking = true;
-        canAttack = false;
+        if (core.player == null) return false;
 
-        //detener su movimiento
-        Rigidbody2D rb = GetComponent<Rigidbody2D>();
-        if (rb != null) rb.linearVelocity = Vector2.zero;
+        // Raycast en la dirección que mira el enemigo
+        Vector2 direction = core.FacingDirection;
+        RaycastHit2D hit = Physics2D.Raycast(attackPoint.position, direction, attackRange, playerLayer);
 
-        anim.SetTrigger("Attack");
-
-        // Esperar cooldown
-        yield return new WaitForSeconds(attackCooldown);
-        isAttacking = false;
-        canAttack = true;
+        return hit.collider != null;
     }
 
-    void OnDrawGizmosSelected()
+    private bool CanAttack()
     {
-        if (rayOrigin == null) return;
+        return Time.time >= lastAttackTime + attackCooldown;
+    }
+
+    // ============================================
+    // ATAQUE
+    // ============================================
+    private IEnumerator AttackRoutine()
+    {
+        core.SetAttacking(true);
+        lastAttackTime = Time.time;
+
+        // Detener movimiento
+        if (core.rb != null)
+        {
+            core.rb.linearVelocity = Vector2.zero;
+        }
+
+        // Trigger de animación
+        if (core.animController != null)
+        {
+            core.animController.TriggerAttack();
+        }
+
+        // Esperar un momento antes de hacer daño (sincronizado con animación)
+        yield return new WaitForSeconds(attackDuration * 0.5f);
+
+        // Hacer daño (también se puede llamar desde Animation Event)
+        DealDamage();
+
+        // Esperar resto de la animación
+        yield return new WaitForSeconds(attackDuration * 0.5f);
+
+        core.SetAttacking(false);
+    }
+
+    /// <summary>
+    /// Método público para ser llamado desde Animation Event
+    /// </summary>
+    public void DealDamage()
+    {
+        // Detectar jugador en hitbox circular
+        Collider2D[] hits = Physics2D.OverlapCircleAll(attackPoint.position, hitboxRadius, playerLayer);
+
+        foreach (Collider2D hit in hits)
+        {
+            if (hit.CompareTag("Player"))
+            {
+                playerLife playerLife = hit.GetComponent<playerLife>();
+                if (playerLife != null)
+                {
+                    Vector2 attackPosition = new Vector2(transform.position.x, 0);
+                    playerLife.TakeDamage(attackPosition, attackDamage);
+                    Debug.Log($"⚔️ {gameObject.name} golpeó al jugador");
+                }
+            }
+        }
+    }
+
+    // ============================================
+    // GIZMOS
+    // ============================================
+    private void OnDrawGizmosSelected()
+    {
+        if (attackPoint == null) return;
+
+        // Rango de detección (raycast)
         Gizmos.color = Color.red;
-        Gizmos.DrawLine(rayOrigin.position, rayOrigin.position + (Vector3)facingDirection * detectionRange);
+        Vector2 direction = core != null ? core.FacingDirection : Vector2.right;
+        Gizmos.DrawLine(attackPoint.position, attackPoint.position + (Vector3)direction * attackRange);
+
+        // Hitbox de daño
+        Gizmos.color = new Color(1, 0, 0, 0.3f);
+        Gizmos.DrawSphere(attackPoint.position, hitboxRadius);
     }
 }
