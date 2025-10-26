@@ -69,7 +69,10 @@ public class EnemySmartMovement : MonoBehaviour
 
     private void Update()
     {
-        if (!core.CanMove) return;
+        if (core == null || !core.CanMove) return;
+
+        if (core.player == null)
+            core.FindPlayer(); // opcional: intenta encontrar jugador cada frame
 
         UpdateGroundedState();
         DetectIfStuck();
@@ -97,7 +100,6 @@ public class EnemySmartMovement : MonoBehaviour
 
     private void DetectIfStuck()
     {
-        // Detectar si el enemigo está trabado (no se mueve)
         float distanceMoved = Vector2.Distance(transform.position, lastPosition);
 
         if (distanceMoved < 0.1f && core.rb.linearVelocity.magnitude > 0.1f)
@@ -133,10 +135,8 @@ public class EnemySmartMovement : MonoBehaviour
         float heightDifference = core.player.position.y - transform.position.y;
         bool playerIsHigher = heightDifference > minJumpHeight;
 
-        // Actualizar orientación
         core.FaceDirection(directionToPlayer);
 
-        // Aplicar lógica según nivel de inteligencia
         switch (intelligenceLevel)
         {
             case IntelligenceLevel.Basic:
@@ -153,9 +153,6 @@ public class EnemySmartMovement : MonoBehaviour
         }
     }
 
-    // ============================================
-    // NIVEL BÁSICO: Solo seguir horizontalmente
-    // ============================================
     private void BasicChase(Vector2 direction)
     {
         if (core.rb != null)
@@ -164,124 +161,76 @@ public class EnemySmartMovement : MonoBehaviour
         }
     }
 
-    // ============================================
-    // NIVEL INTERMEDIO: Puede saltar
-    // ============================================
     private void IntermediateChase(Vector2 direction, bool playerIsHigher)
     {
-        // Movimiento horizontal
         if (core.rb != null)
         {
             core.rb.linearVelocity = new Vector2(direction.x * chaseSpeed, core.rb.linearVelocity.y);
         }
 
-        // Saltar si el jugador está más alto
         if (playerIsHigher && isGrounded && CanJump())
         {
             Jump();
         }
 
-        // Saltar si hay un obstáculo adelante
-        if (HasObstacleAhead() && isGrounded && CanJump())
+        if (DetectObstacleAhead() && isGrounded && CanJump())
         {
             Jump();
         }
     }
 
     // ============================================
-    // NIVEL AVANZADO: Pathfinding completo
+    // NIVEL AVANZADO
     // ============================================
     private void AdvancedChase(Vector2 direction, bool playerIsHigher)
     {
-        bool hasObstacle = HasObstacleAhead();
+        bool obstacleAhead = DetectObstacleAhead();
         bool hasWall = HasWallAhead();
         bool hasPlatformAhead = HasPlatformAhead();
         bool canDropDown = CanDropDown();
 
-        // Si está trabado, intentar saltar
-        if (isStuck && isGrounded && CanJump())
-        {
-            Jump();
-            isStuck = false;
-            return;
-        }
-
-        // Si hay pared, saltar
-        if (hasWall && isGrounded && CanJump())
+        if ((obstacleAhead || hasWall) && isGrounded && CanJump())
         {
             Jump();
         }
-        // Si hay obstáculo pequeño, saltar
-        else if (hasObstacle && isGrounded && CanJump())
-        {
-            Jump();
-        }
-        // Si el jugador está más alto y hay plataforma, saltar
         else if (playerIsHigher && hasPlatformAhead && isGrounded && CanJump())
         {
             Jump();
         }
-        // Si el jugador está abajo y puede bajar, hacerlo
         else if (!playerIsHigher && canDropDown && isGrounded)
         {
-            // Avanzar hacia el borde para caer
             if (core.rb != null)
-            {
                 core.rb.linearVelocity = new Vector2(direction.x * chaseSpeed, core.rb.linearVelocity.y);
-            }
         }
-        // Movimiento normal
         else
         {
             if (core.rb != null)
-            {
                 core.rb.linearVelocity = new Vector2(direction.x * chaseSpeed, core.rb.linearVelocity.y);
+        }
+
+        core.FaceDirection(direction);
+    }
+
+    // ============================================
+    // DETECCIÓN DE OBSTÁCULOS MEJORADA
+    // ============================================
+    private bool DetectObstacleAhead()
+    {
+        Vector2 dir = core.FacingDirection;
+        float[] heights = { 0.2f, 0.5f, 0.8f };
+        foreach (float h in heights)
+        {
+            Vector2 origin = (Vector2)transform.position + Vector2.up * h;
+            RaycastHit2D hit = Physics2D.Raycast(origin, dir, obstacleDetectionDistance, obstacleLayer);
+            if (hit.collider != null)
+            {
+                Debug.DrawLine(origin, origin + dir * obstacleDetectionDistance, Color.red);
+                return true;
             }
         }
+        return false;
     }
 
-    // ============================================
-    // DETECCIÓN DE OBSTÁCULOS
-    // ============================================
-    private bool HasObstacleAhead()
-    {
-        Vector2 direction = core.FacingDirection;
-        Vector2 origin = (Vector2)transform.position + Vector2.up * 0.5f;
-
-        RaycastHit2D hit = Physics2D.Raycast(origin, direction, obstacleDetectionDistance, obstacleLayer);
-        return hit.collider != null;
-    }
-
-    private bool HasWallAhead()
-    {
-        Vector2 direction = core.FacingDirection;
-        Vector2 origin = (Vector2)transform.position + Vector2.up * wallCheckHeight;
-
-        RaycastHit2D hit = Physics2D.Raycast(origin, direction, obstacleDetectionDistance, obstacleLayer);
-        return hit.collider != null;
-    }
-
-    private bool HasPlatformAhead()
-    {
-        Vector2 direction = core.FacingDirection;
-        Vector2 origin = (Vector2)transform.position + direction * platformCheckDistance + Vector2.up;
-
-        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, 3f, groundLayer);
-        return hit.collider != null;
-    }
-
-    private bool CanDropDown()
-    {
-        Vector2 direction = core.FacingDirection;
-        Vector2 origin = groundCheck.position + (Vector3)direction * 0.5f;
-
-        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, dropCheckDistance, groundLayer);
-        return hit.collider == null; // No hay suelo = puede bajar
-    }
-
-    // ============================================
-    // SALTO
-    // ============================================
     private bool CanJump()
     {
         return Time.time >= lastJumpTime + jumpCooldown;
@@ -290,38 +239,30 @@ public class EnemySmartMovement : MonoBehaviour
     private void Jump()
     {
         if (core.rb == null) return;
-
-        core.rb.linearVelocity = new Vector2(core.rb.linearVelocity.x, 0f);
+        float xVel = core.rb.linearVelocity.x;
+        core.rb.linearVelocity = new Vector2(xVel, 0f);
         core.rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
         lastJumpTime = Time.time;
-
-        Debug.Log($"🦘 {gameObject.name} saltó para seguir al jugador");
+        Debug.Log($"🦘 {gameObject.name} saltó por obstáculo detectado");
     }
 
     // ============================================
-    // PATRULLAR
+    // PATRULLA
     // ============================================
     private void Patrol()
     {
-        if (!HasGroundAhead())
-        {
-            FlipDirection();
-        }
+        if (!HasGroundAhead()) FlipDirection();
 
         if (core.rb != null)
         {
-            float direction = movingRight ? 1f : -1f;
-            core.rb.linearVelocity = new Vector2(direction * patrolSpeed, core.rb.linearVelocity.y);
+            float dir = movingRight ? 1f : -1f;
+            core.rb.linearVelocity = new Vector2(dir * patrolSpeed, core.rb.linearVelocity.y);
         }
 
         if (movingRight && !core.FacingRight)
-        {
             core.FaceDirection(Vector2.right);
-        }
         else if (!movingRight && core.FacingRight)
-        {
             core.FaceDirection(Vector2.left);
-        }
     }
 
     private bool HasGroundAhead()
@@ -330,66 +271,35 @@ public class EnemySmartMovement : MonoBehaviour
 
         Vector2 rayOrigin = groundCheck.position + (movingRight ? Vector3.right * 0.3f : Vector3.left * 0.3f);
         RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.down, groundCheckDistance, groundLayer);
-
         return hit.collider != null;
     }
 
     private void FlipDirection()
     {
         movingRight = !movingRight;
-
         if (core.rb != null)
-        {
             core.rb.linearVelocity = new Vector2(0, core.rb.linearVelocity.y);
-        }
     }
 
-    // ============================================
-    // GIZMOS
-    // ============================================
-    private void OnDrawGizmosSelected()
+    private bool HasWallAhead()
     {
-        if (core == null) return;
+        Vector2 origin = (Vector2)transform.position + Vector2.up * wallCheckHeight;
+        RaycastHit2D hit = Physics2D.Raycast(origin, core.FacingDirection, obstacleDetectionDistance, obstacleLayer);
+        return hit.collider != null;
+    }
 
-        // Rango de detección
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, detectionRange);
+    private bool HasPlatformAhead()
+    {
+        Vector2 origin = (Vector2)transform.position + core.FacingDirection * platformCheckDistance + Vector2.up;
+        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, 3f, groundLayer);
+        return hit.collider != null;
+    }
 
-        Vector2 direction = core.FacingDirection;
-
-        // Detección de obstáculos (naranja)
-        Gizmos.color = Color.red;
-        Vector2 obstacleOrigin = (Vector2)transform.position + Vector2.up * 0.5f;
-        Gizmos.DrawLine(obstacleOrigin, obstacleOrigin + direction * obstacleDetectionDistance);
-
-        // Detección de pared (rojo oscuro)
-        Gizmos.color = new Color(0.5f, 0, 0);
-        Vector2 wallOrigin = (Vector2)transform.position + Vector2.up * wallCheckHeight;
-        Gizmos.DrawLine(wallOrigin, wallOrigin + direction * obstacleDetectionDistance);
-
-        // Detección de plataforma adelante (cyan)
-        if (intelligenceLevel == IntelligenceLevel.Advanced)
-        {
-            Gizmos.color = Color.cyan;
-            Vector2 platformOrigin = (Vector2)transform.position + direction * platformCheckDistance + Vector2.up;
-            Gizmos.DrawLine(platformOrigin, platformOrigin + Vector2.down * 3f);
-
-            // Detección de caída (verde)
-            Gizmos.color = Color.green;
-            if (groundCheck != null)
-            {
-                Vector2 dropOrigin = groundCheck.position + (Vector3)direction * 0.5f;
-                Gizmos.DrawLine(dropOrigin, dropOrigin + Vector2.down * dropCheckDistance);
-            }
-        }
-
-        // Detección de suelo (azul)
-        if (groundCheck != null)
-        {
-            Gizmos.color = Color.blue;
-            Vector3 offset = movingRight ? Vector3.right * 0.3f : Vector3.left * 0.3f;
-            Vector3 rayOrigin = groundCheck.position + offset;
-            Gizmos.DrawLine(rayOrigin, rayOrigin + Vector3.down * groundCheckDistance);
-        }
+    private bool CanDropDown()
+    {
+        Vector2 origin = groundCheck.position + (Vector3)core.FacingDirection * 0.5f;
+        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, dropCheckDistance, groundLayer);
+        return hit.collider == null;
     }
 }
+

@@ -127,11 +127,15 @@ GameObject:
   - component: {fileID: 2213891186019595621}
   - component: {fileID: 3214177701150699060}
   - component: {fileID: 3345787503557792628}
-  - component: {fileID: 1081855876082760181}
-  - component: {fileID: 817141688398647830}
+  - component: {fileID: 8728275884724982358}
+  - component: {fileID: 4282913100898536863}
+  - component: {fileID: 6899133255381184899}
+  - component: {fileID: 5010649011079842785}
+  - component: {fileID: 5992622120714477702}
+  - component: {fileID: 7247563641795621655}
   m_Layer: 0
   m_Name: MiniBoss
-  m_TagString: enemy
+  m_TagString: Boss
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -197,7 +201,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 1262583705
-  m_SortingLayer: 5
+  m_SortingLayer: 8
   m_SortingOrder: 1
   m_Sprite: {fileID: -7933326380236590641, guid: 4333d222d158f5b46b4921ad8778a519, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -317,16 +321,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b60dfff6e2fc7b4280a52b27e496979, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  jugador: {fileID: 1776710345640356568, guid: dc0dfb65d9dc32d4dbdcf70da0a95762, type: 3}
-  proyectilPrefab: {fileID: 2318764071426636769, guid: 1495b7dcbb053834e891377159c24d56, type: 3}
+  projectilePrefab: {fileID: 2318764071426636769, guid: 1495b7dcbb053834e891377159c24d56, type: 3}
   spawnPoint: {fileID: 2697501629507091593}
-  alertaGO: {fileID: 4902473340340469568}
-  velocidadMovimiento: 5
-  distanciaGolpe: 2
-  tiempoEntreAtaques: 2
-  piedrasPorLluvia: 5
-  alertaAnimator: {fileID: 5993092846940680683}
---- !u!114 &1081855876082760181
+  alertaPrefab: {fileID: 4902473340340469568}
+  timeBetweenAttacks: 1.5
+  minDistanceForMelee: 2
+  alertDuration: 0.8
+  stonesPerRain: 5
+  rainSpread: 8
+  rainHeight: 10
+  timeBetweenStones: 0.2
+  jumpForce: 5
+  chargeSpeedMultiplier: 2
+  chargeDuration: 2
+  meleeDuration: 1.5
+  moveSpeed: 3
+  moveDuration: 1.5
+--- !u!114 &8728275884724982358
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -335,14 +346,76 @@ MonoBehaviour:
   m_GameObject: {fileID: 2965411740307423545}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c2c0bfbdb8908f944b6f6b6425aa01ee, type: 3}
+  m_Script: {fileID: 11500000, guid: 1549b28ec00af5544899c43e7974b0af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  health: 3
-  maxHealth: 3
-  Boss: 1
-  isDead: 1
---- !u!114 &817141688398647830
+  bossID: Boss2
+  health: 10
+  maxHealth: 10
+  savePointPrefab: {fileID: 8881892248107932051, guid: 768c34e50902085458c4c28329b38437, type: 3}
+  savePointSpawnPosition: {x: 127.6, y: 2.95, z: 0}
+  spawnSavePointOnDeath: 1
+  knockbackForce: 2
+  knockbackRecoveryTime: 0.4
+--- !u!114 &4282913100898536863
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2965411740307423545}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6712b63036ae62543be2ba7e0f69fabd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rb: {fileID: 0}
+  anim: {fileID: 0}
+  spriteRenderer: {fileID: 0}
+  player: {fileID: 0}
+  IsDead: 0
+  IsAttacking: 0
+  IsVulnerable: 1
+  CanMove: 1
+--- !u!114 &6899133255381184899
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2965411740307423545}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b883a58e30144904f8488a932571e288, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &5010649011079842785
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2965411740307423545}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47559525b35cd8b4d8944a47cf9974ec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 3
+  alwaysFacePlayer: 1
+--- !u!114 &5992622120714477702
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2965411740307423545}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6094b5b93a3fdfb4787985e00cdfa645, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &7247563641795621655
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

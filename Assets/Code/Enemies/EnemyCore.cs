@@ -48,14 +48,13 @@ public class EnemyCore : MonoBehaviour
     {
         InitializeComponents();
         FindPlayer();
-        EnemyMovement movement = GetComponent<EnemyMovement>();
-        if (movement != null)
-            movement.Initialize(this);
-    
 
+        // Inicializar movimiento correctamente
+        if (movement != null)
+            movement.Initialize(this); // ya usa la variable de clase
     }
 
-private void InitializeComponents()
+    private void InitializeComponents()
     {
         // Componentes básicos
         rb = GetComponent<Rigidbody2D>();
@@ -84,7 +83,7 @@ private void InitializeComponents()
         if (flying != null) flying.Initialize(this);
     }
 
-    private void FindPlayer()
+    public void FindPlayer()
     {
         if (player == null)
         {

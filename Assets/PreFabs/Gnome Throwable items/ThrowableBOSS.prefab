@@ -10,9 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 5713481272788732494}
   - component: {fileID: 357036324402053199}
-  - component: {fileID: 3050387810483249587}
   - component: {fileID: 7516247938829763027}
   - component: {fileID: -4063952639146166573}
+  - component: {fileID: 1122946262692350517}
   m_Layer: 0
   m_Name: ThrowableBOSS
   m_TagString: Untagged
@@ -77,7 +77,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 1262583705
-  m_SortingLayer: 6
+  m_SortingLayer: 8
   m_SortingOrder: 0
   m_Sprite: {fileID: 468142506262419363, guid: 2103c6eaae73d42439e98ee3fff36b59, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -90,21 +90,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &3050387810483249587
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6682483255585087732}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d75c04e127ac1404cabc5958b3ff6560, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  damage: 1
-  lifetime: 3
-  speed: 9.5
 --- !u!58 &7516247938829763027
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -168,3 +153,17 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 6
+--- !u!114 &1122946262692350517
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6682483255585087732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4e150b3bef86514ca38c12f14ba821f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  damage: 1
+  lifetime: 4

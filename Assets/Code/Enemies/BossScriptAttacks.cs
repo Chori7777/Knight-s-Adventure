@@ -1,198 +1,298 @@
 ﻿using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 
-public class BossScriptAttacks : MonoBehaviour
+/// <summary>
+/// Sistema de ataques del Golem de Piedra (VERSIÓN SIMPLE)
+/// </summary>
+public class StoneGolemAttacks : MonoBehaviour
 {
     [Header("Referencias")]
-    [SerializeField] private Transform jugador;
-    [SerializeField] private GameObject proyectilPrefab;
+    private bossCore core;
+    [SerializeField] private GameObject projectilePrefab;
     [SerializeField] private Transform spawnPoint;
-    [SerializeField] private GameObject alertaGO; // <- Objeto vacío con animación de alerta
+    [SerializeField] private GameObject alertaPrefab;
 
-    [Header("Stats")]
-    [SerializeField] private float velocidadMovimiento = 3f;
-    [SerializeField] private float distanciaGolpe = 2f;
-    [SerializeField] private float tiempoEntreAtaques = 4f;
-    [SerializeField] private int piedrasPorLluvia = 5;
+    [Header("Configuración General")]
+    [SerializeField] private float timeBetweenAttacks = 3f;
+    [SerializeField] private float minDistanceForMelee = 2f;
+    [SerializeField] private float alertDuration = 0.8f;
 
-    private Rigidbody2D rb;
-    private Animator anim;
-    private bool atacando = false;
-    private bool moviendoAleatorio = false;
-    [SerializeField] private Animator alertaAnimator;
+    [Header("Ataque: Lluvia de Piedras")]
+    [SerializeField] private int stonesPerRain = 5;
+    [SerializeField] private float rainSpread = 8f;
+    [SerializeField] private float rainHeight = 10f;
+    [SerializeField] private float timeBetweenStones = 0.2f;
+    [SerializeField] private float jumpForce = 5f;
 
+    [Header("Ataque: Embestida")]
+    [SerializeField] private float chargeSpeedMultiplier = 2f;
+    [SerializeField] private float chargeDuration = 2f;
+
+    [Header("Ataque: Golpe Melee")]
+    [SerializeField] private float meleeDuration = 1.5f;
+
+    [Header("Movimiento")]
+    [SerializeField] private float moveSpeed = 3f;
+    [SerializeField] private float moveDuration = 1.5f;
+
+    private GameObject currentAlert;
+    private bool isMoving = false;
+
+    // ============================================
+    // INICIALIZACIÓN
+    // ============================================
     private void Start()
     {
-        rb = GetComponent<Rigidbody2D>();
-        anim = GetComponent<Animator>();
-        alertaGO.SetActive(false);
+        // Buscar BossCore
+        core = GetComponent<bossCore>();
 
-        // 🎮 Buscar al jugador automáticamente por tag
-        if (jugador == null)
+        if (core == null)
         {
-            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-            if (playerObj != null)
-            {
-                jugador = playerObj.transform;
-                Debug.Log("Jugador encontrado automáticamente: " + jugador.gameObject.name);
-            }
-            else
-            {
-                Debug.LogError("No se encontró al jugador. Asegúrate de que tenga el tag 'Player'");
-                return;
-            }
+            Debug.LogError($"❌ {gameObject.name}: No se encontró BossCore!");
+            enabled = false;
+            return;
         }
 
-        StartCoroutine(PatronIA());
+        // Crear alerta si existe
+        if (alertaPrefab != null)
+        {
+            currentAlert = Instantiate(alertaPrefab, transform);
+            currentAlert.SetActive(false);
+        }
+
+        // Crear spawn point si no existe
+        if (spawnPoint == null)
+        {
+            GameObject spawnObj = new GameObject("ProjectileSpawnPoint");
+            spawnObj.transform.SetParent(transform);
+            spawnObj.transform.localPosition = new Vector3(0, 2f, 0);
+            spawnPoint = spawnObj.transform;
+        }
+
+        Debug.Log($"✅ {gameObject.name}: Sistema de ataques iniciado");
+
+        // Iniciar loop de ataques
+        StartCoroutine(AttackLoop());
     }
 
+    // ============================================
+    // LOOP PRINCIPAL
+    // ============================================
+    private IEnumerator AttackLoop()
+    {
+        Debug.Log($"🔥 {gameObject.name}: Loop de ataques iniciado");
+
+        yield return new WaitForSeconds(1f); // Espera inicial
+
+        int attackCount = 0;
+
+        while (!core.IsDead)
+        {
+            attackCount++;
+            Debug.Log($"⚔️ Ataque #{attackCount} - Distancia al jugador: {core.DistanceToPlayer():F2}");
+
+            if (!core.IsAttacking && core.player != null)
+            {
+                // Decidir qué ataque hacer
+                float distance = core.DistanceToPlayer();
+
+                if (distance <= minDistanceForMelee)
+                {
+                    Debug.Log("👊 Ejecutando: Golpe Melee");
+                    yield return StartCoroutine(MeleeAttack());
+                }
+                else
+                {
+                    int attackChoice = Random.Range(0, 2);
+
+                    if (attackChoice == 0)
+                    {
+                        Debug.Log("🪨 Ejecutando: Lluvia de Piedras");
+                        yield return StartCoroutine(StoneRainAttack());
+                    }
+                    else
+                    {
+                        Debug.Log("🏃 Ejecutando: Embestida");
+                        yield return StartCoroutine(ChargeAttack());
+                    }
+                }
+            }
+
+            Debug.Log($"⏳ Esperando {timeBetweenAttacks}s...");
+            yield return new WaitForSeconds(timeBetweenAttacks);
+        }
+        Debug.Log($"💀 {gameObject.name}: Loop terminado (jefe muerto)");
+    }
+
+    // ============================================
+    // MOVIMIENTO (cuando no ataca)
+    // ============================================
     private void Update()
     {
-        if (jugador == null) return; // Seguridad
+        if (core == null || core.IsDead) return;
 
-        // Si no está atacando, se mueve de forma aleatoria estratégica
-        if (!atacando)
+        // Mirar al jugador
+        core.FacePlayer();
+
+        // Movimiento estratégico
+        if (!core.IsAttacking && !isMoving)
         {
-            if (!moviendoAleatorio)
-                StartCoroutine(MovimientoEstrategico());
+            StartCoroutine(StrategicMovement());
         }
-
-        // Golpe cuerpo a cuerpo si el jugador está cerca
-        float distancia = Vector2.Distance(transform.position, jugador.position);
-        if (distancia <= distanciaGolpe && !atacando)
-        {
-            StartCoroutine(AtaqueGolpe());
-        }
-
-        // Orientar sprite hacia el jugador
-        if (jugador.position.x < transform.position.x)
-            transform.localScale = new Vector3(-1, 1, 1);
-        else
-            transform.localScale = new Vector3(1, 1, 1);
     }
 
-    // 🧭 Movimiento "aleatorio" entre acercarse o alejarse
-    private IEnumerator MovimientoEstrategico()
+    private IEnumerator StrategicMovement()
     {
-        moviendoAleatorio = true;
-        float duracion = Random.Range(1f, 2f);
-        float tiempo = 0f;
+        isMoving = true;
 
-        Vector2 direccion = (jugador.position - transform.position).normalized;
-        bool acercarse = Random.value > 0.5f;
+        float duration = Random.Range(1f, moveDuration);
+        float elapsed = 0f;
 
-        while (tiempo < duracion && !atacando)
+        bool shouldApproach = Random.value > 0.5f;
+        Vector2 direction = core.DirectionToPlayer();
+
+        if (!shouldApproach) direction = -direction;
+
+        while (elapsed < duration && !core.IsAttacking)
         {
-            tiempo += Time.deltaTime;
-            float dirX = acercarse ? direccion.x : -direccion.x;
-            rb.linearVelocity = new Vector2(dirX * velocidadMovimiento, rb.linearVelocity.y);
+            core.rb.linearVelocity = new Vector2(direction.x * moveSpeed, core.rb.linearVelocity.y);
+            elapsed += Time.deltaTime;
             yield return null;
         }
 
-        rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
-        moviendoAleatorio = false;
+        core.rb.linearVelocity = new Vector2(0, core.rb.linearVelocity.y);
+        isMoving = false;
     }
 
-    // 🧠 Control de IA por patrones
-    private IEnumerator PatronIA()
+    // ============================================
+    // ATAQUE 1: LLUVIA DE PIEDRAS
+    // ============================================
+    private IEnumerator StoneRainAttack()
     {
-        while (true)
+        core.IsAttacking = true;
+        core.rb.linearVelocity = Vector2.zero;
+
+        // Alerta
+        yield return StartCoroutine(ShowAlert());
+
+        // Salto
+        core.rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+        yield return new WaitForSeconds(0.5f);
+
+        // Generar piedras
+        for (int i = 0; i < stonesPerRain; i++)
         {
-            yield return new WaitForSeconds(tiempoEntreAtaques);
+            SpawnStone();
+            yield return new WaitForSeconds(timeBetweenStones);
+        }
 
-            if (atacando) continue;
+        yield return new WaitForSeconds(0.5f);
+        core.IsAttacking = false;
+    }
 
-            int ataque = Random.Range(0, 2); // 0 = lluvia / 1 = correr (melee es condicional)
-            switch (ataque)
+    private void SpawnStone()
+    {
+        if (projectilePrefab == null || spawnPoint == null)
+        {
+            Debug.LogWarning("⚠️ Falta projectilePrefab o spawnPoint");
+            return;
+        }
+
+        Vector3 spawnPosition = spawnPoint.position;
+        float randomX = Random.Range(-rainSpread, rainSpread);
+        spawnPosition.x += randomX;
+        spawnPosition.y += rainHeight;
+
+        Instantiate(projectilePrefab, spawnPosition, Quaternion.identity);
+    }
+
+    // ============================================
+    // ATAQUE 2: EMBESTIDA
+    // ============================================
+    private IEnumerator ChargeAttack()
+    {
+        core.IsAttacking = true;
+        core.rb.linearVelocity = Vector2.zero;
+
+        // Alerta
+        yield return StartCoroutine(ShowAlert());
+
+        // Animación
+        if (core.anim != null)
+        {
+            core.anim.SetTrigger("Run");
+        }
+
+        // Cargar
+        Vector2 chargeDirection = core.DirectionToPlayer();
+        float chargeSpeed = moveSpeed * chargeSpeedMultiplier;
+
+        float elapsedTime = 0f;
+        while (elapsedTime < chargeDuration)
+        {
+            core.rb.linearVelocity = new Vector2(chargeDirection.x * chargeSpeed, core.rb.linearVelocity.y);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        core.rb.linearVelocity = Vector2.zero;
+
+        // Piedras al final
+        for (int i = 0; i < stonesPerRain; i++)
+        {
+            SpawnStone();
+            yield return new WaitForSeconds(timeBetweenStones);
+        }
+
+        yield return new WaitForSeconds(0.5f);
+        core.IsAttacking = false;
+    }
+
+    // ============================================
+    // ATAQUE 3: GOLPE MELEE
+    // ============================================
+    private IEnumerator MeleeAttack()
+    {
+        core.IsAttacking = true;
+        core.rb.linearVelocity = Vector2.zero;
+
+        // Alerta corta
+        yield return StartCoroutine(ShowAlert(0.5f));
+
+        // Animación
+        if (core.anim != null)
+        {
+            core.anim.SetTrigger("Attack");
+        }
+
+        yield return new WaitForSeconds(meleeDuration);
+
+        core.IsAttacking = false;
+    }
+
+    // ============================================
+    // ALERTA
+    // ============================================
+    private IEnumerator ShowAlert(float duration = -1)
+    {
+        if (duration < 0) duration = alertDuration;
+
+        if (currentAlert != null)
+        {
+            currentAlert.SetActive(true);
+            Animator alertAnim = currentAlert.GetComponent<Animator>();
+            if (alertAnim != null)
             {
-                case 0:
-                    StartCoroutine(AtaqueLluvia());
-                    break;
-                case 1:
-                    StartCoroutine(AtaqueCorrer());
-                    break;
+                alertAnim.SetTrigger("Alert");
             }
         }
-    }
 
-    // ⚠️ Mostrar alerta antes de cualquier ataque
-    private IEnumerator MostrarAlerta(float duracion = 0.8f)
-    {
-        alertaGO.SetActive(true);
-        alertaAnimator.SetTrigger("Alert");
-        yield return new WaitForSeconds(duracion);
-        alertaGO.SetActive(false);
-    }
+        yield return new WaitForSeconds(duration);
 
-    // 🪨 Ataque 1: Salta y hace lluvia de piedras
-    private IEnumerator AtaqueLluvia()
-    {
-        atacando = true;
-        rb.linearVelocity = Vector2.zero;
-
-        yield return StartCoroutine(MostrarAlerta());
-
-        // Salto + lluvia
-        rb.AddForce(Vector2.up * 5f, ForceMode2D.Impulse);
-        yield return new WaitForSeconds(0.5f);
-
-        for (int i = 0; i < piedrasPorLluvia; i++)
+        if (currentAlert != null)
         {
-            float x = Random.Range(spawnPoint.position.x - 8f, spawnPoint.position.x + 8f);
-            float y = spawnPoint.position.y + 10f;
-            Instantiate(proyectilPrefab, new Vector3(x, y, 0f), Quaternion.identity);
-            yield return new WaitForSeconds(0.2f);
+            currentAlert.SetActive(false);
         }
-
-        yield return new WaitForSeconds(0.5f);
-        atacando = false;
-    }
-
-    // 🏃‍♂️ Ataque 2: Corre hacia el jugador
-    private IEnumerator AtaqueCorrer()
-    {
-        atacando = true;
-        rb.linearVelocity = Vector2.zero;
-
-        yield return StartCoroutine(MostrarAlerta());
-        anim.SetTrigger("Run");
-        Vector2 direccion = (jugador.position - transform.position).normalized;
-        rb.linearVelocity = new Vector2(direccion.x * velocidadMovimiento * 2f, rb.linearVelocity.y);
-
-        float tiempo = 0f;
-        while (tiempo < 2f)
-        {
-            tiempo += Time.deltaTime;
-            yield return null;
-        }
-
-        rb.linearVelocity = Vector2.zero;
-
-        // Al "chocar", genera piedras
-        for (int i = 0; i < piedrasPorLluvia; i++)
-        {
-            float x = Random.Range(spawnPoint.position.x - 8f, spawnPoint.position.x + 8f);
-            float y = spawnPoint.position.y + 10f;
-            Instantiate(proyectilPrefab, new Vector3(x, y, 0f), Quaternion.identity);
-            yield return new WaitForSeconds(0.2f);
-        }
-
-        yield return new WaitForSeconds(0.5f);
-        atacando = false;
-    }
-
-    // 👊 Ataque 3: Golpe cuerpo a cuerpo si el jugador está cerca
-    private IEnumerator AtaqueGolpe()
-    {
-        atacando = true;
-        rb.linearVelocity = Vector2.zero;
-
-        yield return StartCoroutine(MostrarAlerta(0.5f));
-
-        anim.SetTrigger("Attack");
-        Debug.Log("MeleeAttack");
-        yield return new WaitForSeconds(1.5f); // duración del ataque
-
-        atacando = false;
     }
 }

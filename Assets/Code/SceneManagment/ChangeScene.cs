@@ -69,9 +69,29 @@ public class ChangeScene : MonoBehaviour
 
     public void NewGame()
     {
+        Debug.Log("🆕 Iniciando nueva partida...");
         Debug.Log("MainMenuVariation = " + MainMenuVariation);
+
+        // 1️⃣ Borrar archivo de guardado existente
         BorrarPartidaGuardada();
 
+        // 2️⃣ Resetear datos del juego en memoria
+        if (ControladorDatosJuego.Instance != null)
+        {
+            // Reinicia todos los datos
+            ControladorDatosJuego.Instance.ResetearDatos();
+
+            // Limpia también la lista de jefes derrotados
+            ControladorDatosJuego.Instance.datosjuego.jefesDerrotados.Clear();
+
+            Debug.Log("🔁 Lista de jefes derrotados reiniciada");
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ No se encontró el ControladorDatosJuego al reiniciar");
+        }
+
+        // 3️⃣ Elegir escena según variación de menú
         if (MainMenuVariation == 0)
         {
             Debug.Log("Cargando CharacterSelector");
@@ -87,6 +107,7 @@ public class ChangeScene : MonoBehaviour
             Debug.LogWarning("MainMenuVariation tiene un valor inesperado: " + MainMenuVariation);
         }
     }
+
 
 
     //  CONTINUAR PARTIDA
