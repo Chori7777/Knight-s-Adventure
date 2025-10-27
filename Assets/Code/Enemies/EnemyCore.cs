@@ -1,7 +1,7 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 /// <summary>
-/// Núcleo del enemigo - Gestiona referencias y estados globales
+/// NÃºcleo del enemigo - Gestiona referencias y estados globales
 /// </summary>
 public class EnemyCore : MonoBehaviour
 {
@@ -12,7 +12,7 @@ public class EnemyCore : MonoBehaviour
     [HideInInspector] public Animator anim;
     [HideInInspector] public SpriteRenderer spriteRenderer;
 
-    // Módulos opcionales
+    // MÃ³dulos opcionales
     [HideInInspector] public EnemyAnimationController animController;
     [HideInInspector] public EnemyMovement movement;
     [HideInInspector] public EnemyLife life;
@@ -35,14 +35,14 @@ public class EnemyCore : MonoBehaviour
     public Transform player;
 
     // ============================================
-    // ORIENTACIÓN
+    // ORIENTACIÃ“N
     // ============================================
     public bool FacingRight { get; private set; } = true;
 
     public Vector2 FacingDirection => FacingRight ? Vector2.right : Vector2.left;
 
     // ============================================
-    // INICIALIZACIÓN
+    // INICIALIZACIÃ“N
     // ============================================
     private void Awake()
     {
@@ -56,12 +56,12 @@ public class EnemyCore : MonoBehaviour
 
     private void InitializeComponents()
     {
-        // Componentes básicos
+        // Componentes bÃ¡sicos
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
 
-        // Módulos opcionales
+        // MÃ³dulos opcionales
         animController = GetComponent<EnemyAnimationController>();
         movement = GetComponent<EnemyMovement>();
         life = GetComponent<EnemyLife>();
@@ -75,7 +75,7 @@ public class EnemyCore : MonoBehaviour
             animController.Initialize(this);
         }
 
-        // Inicializar módulos
+        // Inicializar mÃ³dulos
         if (movement != null) movement.Initialize(this);
         if (life != null) life.Initialize(this);
         if (meleeAttack != null) meleeAttack.Initialize(this);
@@ -96,7 +96,7 @@ public class EnemyCore : MonoBehaviour
     }
 
     // ============================================
-    // CONTROL DE ORIENTACIÓN
+    // CONTROL DE ORIENTACIÃ“N
     // ============================================
     public void FaceDirection(Vector2 direction)
     {

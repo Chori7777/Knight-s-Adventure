@@ -85,7 +85,7 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 535337391
-  m_SortingLayer: 3
+  m_SortingLayer: 4
   m_SortingOrder: 0
   m_Sprite: {fileID: -8510223517837694399, guid: ba4c7194051b5024cab322a2d3db5f1f, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -210,6 +210,7 @@ MonoBehaviour:
   spriteRenderer: {fileID: 0}
   animController: {fileID: 0}
   movement: {fileID: 0}
+  smartMovement: {fileID: 0}
   life: {fileID: 0}
   meleeAttack: {fileID: 0}
   rangedAttack: {fileID: 0}
@@ -314,7 +315,7 @@ MonoBehaviour:
   wallCheckHeight: 1
   obstacleLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 4096
   platformCheckDistance: 3
   dropCheckDistance: 2
 --- !u!1 &5532874574895454992
